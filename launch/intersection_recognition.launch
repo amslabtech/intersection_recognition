@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+	<node name="detect_peak_savecloud" pkg="hsd_pcl_tutorial" type="detect_peak_savecloud"/>
+	<!-- <node name="detect_peak" pkg="hsd_pcl_tutorial" type="detect_peak_new"/> -->
+
+	<!-- <node name="save_velodyne_points" pkg="hsd_pcl_tutorial" type="conv_clouds" /> -->
+	<node name="save_velodyne_points" pkg="hsd_pcl_tutorial" type="save_velodyne_points_normal_odometry_for_paper" />
+
+	<node name="hsd_normal_shimizu2" pkg="hsd_pcl_tutorial" type="hsd_normal_shimizu2"/>
+
+	<node name="intersection_shape_matching" pkg="hsd_pcl_tutorial" type="intersection_shape_matching" output="screen" >
+		<rosparam file="$(find params)/run_test/ignore_node.yaml" />
+	</node>
+
+</launch>
