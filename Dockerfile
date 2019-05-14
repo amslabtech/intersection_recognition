@@ -12,6 +12,9 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_releas
 
 RUN apt-get update
 
+RUN apt-get install ros-kinetic-pcl-ros \
+                    libpcl-dev
+
 WORKDIR /root
 
 # ROS setting
