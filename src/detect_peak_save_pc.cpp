@@ -43,8 +43,6 @@ int devide = 720;
 // double threshold = 7.0;
 // ikuta
 double threshold = 25.0;
-// double threshold = 27.0;
-// double threshold = 30.0;
 
 ros::Publisher peak_pub;
 ros::Publisher marker_pub;
@@ -80,8 +78,8 @@ void Calc_peak(CloudAPtr peak)
 	set_deg.data.clear();
 	int array_size = 0;
 
-	size_t cloud_size = peak->points.size()-devide/18;
-	size_t certification = 40;
+	size_t cloud_size = peak->points.size()-devide/18; //devide/18の存在意義？？？
+	size_t certification = 40; //何者？
 	int count = 0;
 	bool publish_flag = false;
 
@@ -99,14 +97,13 @@ void Calc_peak(CloudAPtr peak)
 	line_list.color.r = 1.0;
  	line_list.color.a = 1.0;
 
-	for(size_t i=0;i<cloud_size;i++){
+	for(size_t i=0;i<cloud_size;i++){ //全点探索
 		if(peak->points[i].intensity >=threshold){
 			count=0;
 			size_t tmp_j = i;
 			for(size_t j = tmp_j;j<tmp_j+certification;j++){
 				if(peak->points[j].intensity >=threshold){
 					count++;
-					// if(count==20){
 					if(count==10){
 						double tmp_i = i;
 						double fif_mean = 0;
@@ -115,14 +112,9 @@ void Calc_peak(CloudAPtr peak)
 							for(size_t k=tmp_i;k<tmp_i+5;k++){
 								fif_mean += peak->points[k].intensity;
 							}
-							fif_mean = fif_mean/5.0;
-							// cout<<"五点平均"<<fif_mean<<endl;
+							fif_mean = fif_mean/5.0; //5点平均
 							if(fif_mean<=(threshold-3.0)){//detect end of load
-							// if(fif_mean<=(threshold-0.90)){//detect end of load
 								fif_mean = 0.0;
-								// cout<<"start:"<<i<<endl;
-								// cout<<"end:"<<tmp_i<<endl;
-								// if(tmp_i - i>=20){
 								if(tmp_i - i>=10){
 									cout<<"its a road!!!!:"<<(double)i+(tmp_i-i)/2.0<<endl;
 									set_deg.data.push_back( i + (int)((tmp_i-i)/2.0) );
@@ -148,9 +140,6 @@ void Calc_peak(CloudAPtr peak)
 							fif_mean = 0.0;
 
 							if(tmp_i==devide){
-								// cout<<"start:"<<i<<endl;
-								// cout<<"end:"<<tmp_i<<endl;
-								// if(tmp_i - i>=30){
 								if(tmp_i - i>=10){
 									cout<<"its a road!!!!:"<<(double)i+(tmp_i-i)/2.0<<endl;
 									set_deg.data.push_back( i + (int)((tmp_i-i)/2.0) );
@@ -161,9 +150,6 @@ void Calc_peak(CloudAPtr peak)
 									p.z = 0.0;
 									line_list.points.push_back(p);
 									int p_i = (int)(i + (tmp_i - i)/2.0);
-									// p.x  = peak->points[(int)(i + (tmp_i - i)/2.0)].x;
-									// p.y  = peak->points[(int)(i + (tmp_i - i)/2.0)].y;
-									// p.z  = peak->points[(int)(i + (tmp_i - i)/2.0)].z;
 									p.x  = peak->points[p_i].x;
 									p.y  = peak->points[p_i].y;
 									p.z  = peak->points[p_i].z;
@@ -402,7 +388,7 @@ void Calc_threshold(CloudAPtr shape_cloud,double& threshold)
 void Detect_peak(CloudAPtr shape_cloud)
 {
 	size_t cloud_size = shape_cloud->points.size();
-	size_t tmp_size = cloud_size + devide/18;
+	size_t tmp_size = cloud_size + devide/18; //tm_sizeの存在意義？
 
 	//閾値を四分位法から推定
 	Calc_threshold(shape_cloud,threshold);
@@ -411,7 +397,7 @@ void Detect_peak(CloudAPtr shape_cloud)
 	//peak detectする前にデータの繰り返しを行いデータの不連続面に対してもpeak detectを行う
 	//更にデータに対して最大値を儲ける
 	for(size_t i = 0;i<tmp_size;i++){
-		extend_shape->push_back(shape_cloud->points[i%cloud_size]);
+		extend_shape->push_back(shape_cloud->points[i%cloud_size]); //i>=cloud_sizeとは？
 		distance = calc_distance(extend_shape->points[i]);
 		if(distance > threshold+3.0){
 			// A

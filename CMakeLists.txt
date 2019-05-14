@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 project(intersection_recognition)
 SET(FAST_PCL_PACKAGES filters registration)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -15,11 +18,14 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   nav_msgs
   ${FAST_PCL_PACKAGES}
+  amsl_navigation_managers
+  amsl_navigation_msgs
+  cmake_modules
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(PCL 1.8.0 REQUIRED)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -27,7 +33,8 @@ if (OPENMP_FOUND)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-
+find_package(Eigen3 REQUIRED COMPONENTS system)
+find_package(PCL REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -59,8 +66,8 @@ endif()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
+# add_message_files(
+  # FILES
   # AMU_data.msg
   # CeresDrive.msg
   # CeresSteer.msg
@@ -69,8 +76,8 @@ add_message_files(
   # GPSStatus.msg
   # GPS_data.msg
   # ImageWithOdometry.msg
-  PointCloud2WithOdom.msg
-)
+  # PointCloud2WithOdom.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -138,7 +145,7 @@ CATKIN_DEPENDS roscpp rospy std_msgs message_runtime sensor_msgs geometry_msgs $
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-		# include
+  # include
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
@@ -160,16 +167,49 @@ SET(CMAKE_CXX_FLAGS "-std=c++11 -O2 -g -Wall ${CMAKE_CXX_FLAGS}")
 # add_dependencies(ceres_msgs ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(ceres_msgs_node src/ceres_msgs_node.cpp)
+## With catkin_make all packages are built within a single CMake context
+## The recommended prefix ensures that target names across packages don't collide
+# add_executable(${PROJECT_NAME}_node src/intersection_recognition_node.cpp)
+add_executable(calc_shape_saveclouds src/calc_shape_saveclouds.cpp)
+add_executable(detect_peak_save_pc src/detect_peak_save_pc.cpp)
+add_executable(intersection_matching src/intersection_matching.cpp)
+add_executable(normal_curvature_pc_bottom src/normal_curvature_pc_bottom.cpp)
+add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
+
+## Rename C++ executable without prefix
+## The above recommended prefix causes long target names, the following renames the
+## target back to the shorter version for ease of user use
+## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
+# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(ceres_msgs_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(calc_shape_saveclouds ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(detect_peak_save_pc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(normal_curvature_pc_bottom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(ceres_msgs_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(calc_shape_saveclouds
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(detect_peak_save_pc
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(intersection_matching
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(normal_curvature_pc_bottom
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(save_velodyne_normal_pc_odom
+  ${catkin_LIBRARIES}
+)
 
 
 
