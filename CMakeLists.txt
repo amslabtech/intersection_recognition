@@ -94,12 +94,12 @@ find_package(PCL REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   sensor_msgs
+#   geometry_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -133,7 +133,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ceres_msgs
-CATKIN_DEPENDS roscpp rospy std_msgs message_runtime sensor_msgs geometry_msgs ${FAST_PCL_PACKAGES}
+CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs ${FAST_PCL_PACKAGES}
 #  DEPENDS system_lib
 )
 
@@ -170,11 +170,6 @@ SET(CMAKE_CXX_FLAGS "-std=c++11 -O2 -g -Wall ${CMAKE_CXX_FLAGS}")
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/intersection_recognition_node.cpp)
-add_executable(calc_shape_saveclouds src/calc_shape_saveclouds.cpp)
-add_executable(detect_peak_save_pc src/detect_peak_save_pc.cpp)
-add_executable(intersection_matching src/intersection_matching.cpp)
-add_executable(normal_curvature_pc_bottom src/normal_curvature_pc_bottom.cpp)
-add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -185,59 +180,42 @@ add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(calc_shape_saveclouds ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(detect_peak_save_pc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(normal_curvature_pc_bottom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(ceres_msgs_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(calc_shape_saveclouds
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(detect_peak_save_pc
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(intersection_matching
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(normal_curvature_pc_bottom
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(save_velodyne_normal_pc_odom
-  ${catkin_LIBRARIES}
-)
-
-
 
 add_executable(normal_curvature_pc_bottom src/normal_curvature_pc_bottom.cpp)
+add_dependencies(normal_curvature_pc_bottom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(normal_curvature_pc_bottom
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
 add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
+add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(save_velodyne_normal_pc_odom
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
 add_executable(calc_shape_saveclouds src/calc_shape_saveclouds.cpp)
+add_dependencies(calc_shape_saveclouds ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(calc_shape_saveclouds
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
 add_executable(detect_peak_save_pc src/detect_peak_save_pc.cpp)
+add_dependencies(detect_peak_save_pc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(detect_peak_save_pc
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
 add_executable(intersection_matching src/intersection_matching.cpp)
+add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(intersection_matching
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
