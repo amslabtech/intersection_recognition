@@ -18,7 +18,6 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <nav_msgs/Odometry.h>
-#include <infant_msgs/PointCloud2WithOdometry.h>
 #include <pcl/filters/voxel_grid.h>
 
 #include <std_msgs/Float64.h>
@@ -159,7 +158,6 @@ bool zed_flag = false;
 CloudAPtr zed_cloud (new CloudA);
 // CloudA zed_debug ;
 
-/* void ZedCallback(infant_msgs::PointCloud2WithOdometry input){ */
 void ZedCallback(sensor_msgs::PointCloud2 input){
 		sensor_msgs::PointCloud2 pc2;
 		// pc2 = input.point_cloud2;
