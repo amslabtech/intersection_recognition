@@ -186,40 +186,40 @@ SET(CMAKE_CXX_FLAGS "-std=c++11 -O2 -g -Wall ${CMAKE_CXX_FLAGS}")
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(normal_curvature_pc_bottom src/normal_curvature_pc_bottom.cpp)
-add_dependencies(normal_curvature_pc_bottom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(normal_curvature_pc_bottom
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
-add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(save_velodyne_normal_pc_odom
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-add_executable(calc_shape_saveclouds src/calc_shape_saveclouds.cpp)
-add_dependencies(calc_shape_saveclouds ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(calc_shape_saveclouds
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-add_executable(detect_peak_save_pc src/detect_peak_save_pc.cpp)
-add_dependencies(detect_peak_save_pc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(detect_peak_save_pc
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-add_executable(intersection_matching src/intersection_matching.cpp)
-add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(intersection_matching
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
+#add_executable(normal_curvature_pc_bottom src/normal_curvature_pc_bottom.cpp)
+#add_dependencies(normal_curvature_pc_bottom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(normal_curvature_pc_bottom
+#  ${catkin_LIBRARIES}
+#  ${PCL_LIBRARIES}
+#)
+#
+#add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
+#add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(save_velodyne_normal_pc_odom
+#  ${catkin_LIBRARIES}
+#  ${PCL_LIBRARIES}
+#)
+#
+#add_executable(calc_shape_saveclouds src/calc_shape_saveclouds.cpp)
+#add_dependencies(calc_shape_saveclouds ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(calc_shape_saveclouds
+#  ${catkin_LIBRARIES}
+#  ${PCL_LIBRARIES}
+#)
+#
+#add_executable(detect_peak_save_pc src/detect_peak_save_pc.cpp)
+#add_dependencies(detect_peak_save_pc ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(detect_peak_save_pc
+#  ${catkin_LIBRARIES}
+#  ${PCL_LIBRARIES}
+#)
+#
+#add_executable(intersection_matching src/intersection_matching.cpp)
+#add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(intersection_matching
+#  ${catkin_LIBRARIES}
+#  ${PCL_LIBRARIES}
+#)
 
 
 
