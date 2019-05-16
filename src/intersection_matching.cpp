@@ -27,7 +27,7 @@
 #include "amsl_navigation_msgs/Edge.h"
 #include "amsl_navigation_msgs/NodeEdgeMap.h"
 
-
+/*
 typedef pcl::PointXYZI PointI;
 typedef pcl::PointCloud<PointI> CloudI;
 typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
@@ -35,7 +35,7 @@ typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
 typedef pcl::PointXYZINormal PointINormal;
 typedef pcl::PointCloud<PointINormal> CloudINormal;
 typedef pcl::PointCloud<PointINormal>::Ptr CloudINormalPtr;
-
+*/
 
 /*
 double get_yaw(geometry_msgs::Quaternion q)
