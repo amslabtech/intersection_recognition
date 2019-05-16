@@ -54,7 +54,7 @@ public:
 	IntersectionMatching();
 
 	void peak_deg_callback(const std_msgs::Int32MultiArray::Ptr&);
-	void estimated_pose_callback(const nav_msgs::OdometryConstPtr&);
+	//void estimated_pose_callback(const nav_msgs::OdometryConstPtr&);
 	void edge_callback(const amsl_navigation_msgs::EdgeConstPtr&);
 	
 	void intersection_matching_manager(void);
@@ -78,7 +78,8 @@ private:
 
 	amsl_navigation_msgs::Edge edge;
 
-	float edge_progress;
+	float edge_progress_threshold_max;
+	float edge_progress_threshold_min;
 
 	bool peak_deg_callback_flag;
 	bool estimated_pose_callback_flag;
@@ -110,11 +111,12 @@ IntersectionMatching::IntersectionMatching(void)
 	intersection_recognize_flag = false;
 	intersection_flag.data = false;
 
-	edge_progress = 0.8;
-
+	n.getParam("edge_progress_threshold_max",edge_progress_threshold_max);
+	n.getParam("edge_progress_threshold_min",edge_progress_threshold_min);
+	
 	peak_deg_sub = nh.subscribe("/peak/deg", 1, &IntersectionMatching::peak_deg_callback, this);
 	edge_sub = nh.subscribe("/edge/certain", 1, &IntersectionMatching::edge_callback, this);
-	estimated_pose_sub = nh.subscribe("/estimated_pose/pose", 1, &IntersectionMatching::estimated_pose_callback, this);
+	//estimated_pose_sub = nh.subscribe("/estimated_pose/pose", 1, &IntersectionMatching::estimated_pose_callback, this);
 
 	intersection_flag_pub = nh.advertise<std_msgs::Bool>("/intersection_flag", 1);
 }
@@ -142,13 +144,13 @@ void IntersectionMatching::peak_deg_callback(const std_msgs::Int32MultiArray::Pt
 	peak_deg_callback_flag = true;
 }
 
-
+/*
 void IntersectionMatching::estimated_pose_callback(const nav_msgs::OdometryConstPtr &msg)
 {
 	estimated_pose = *msg;
 	estimated_pose_callback_flag = true;
 }
-
+*/
 
 void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPtr &msg)
 {
@@ -159,7 +161,7 @@ void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPt
 
 bool IntersectionMatching::intersection_detect_mode_manager(void)
 {
-	if(edge.progress > edge_progress){ 
+	if(edge.progress > edge_progress_threshold_min && edge.progress < edge_progress_threshold_max){ 
 		intersection_detect_mode_flag = true;
 	}else{
 		intersection_detect_mode_flag = false;
@@ -171,5 +173,13 @@ bool IntersectionMatching::intersection_detect_mode_manager(void)
 
 bool IntersectionMatching::intersection_recognizer(void)
 {
+	if(intersection_detect_mode_flag){
+		if(peak_deg.data.size() > 2){
+			intersection_recognize_flag = true;	
+		}
+	}else{
+		intersection_recognize_flag = false;
+	}
+
 	return intersection_recognize_flag;	
 }
