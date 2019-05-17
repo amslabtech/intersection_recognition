@@ -124,13 +124,14 @@ IntersectionMatching::IntersectionMatching(void)
 
 void IntersectionMatching::intersection_matching_manager(void)
 {
-	IntersectionMatching ism;
+	//IntersectionMatching ism;
 
-	ros::Rate r(10);
+	ros::Rate r(100);
 	while(ros::ok()){
 		if(peak_deg_callback_flag && estimated_pose_callback_flag && edge_callback_flag){
 			std::cout << "flags : true" << std::endl;
-			intersection_flag.data = ism.intersection_recognizer();
+			//intersection_flag.data = ism.intersection_recognizer();
+			intersection_flag.data = intersection_recognizer();
 			intersection_flag_pub.publish(intersection_flag);
 		}
 		r.sleep();
