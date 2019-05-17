@@ -49,8 +49,6 @@
   <!-- <build_depend>message_generation</build_depend> -->
   <build_depend>tf</build_depend>
   <build_depend>nav_msgs</build_depend>
-  <build_depend>filters</build_depend>
-  <build_depend>registration</build_depend>
   <build_depend>cmake_modules</build_depend>
   <build_depend>amsl_navigation_msgs</build_depend>
   
@@ -63,8 +61,6 @@
   <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>nav_msgs</build_export_depend>
-  <build_export_depend>filters</build_export_depend>
-  <build_export_depend>registration</build_export_depend>
   
   <exec_depend>amsl_navigation_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
@@ -75,8 +71,6 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>filters</exec_depend>
-  <exec_depend>registration</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

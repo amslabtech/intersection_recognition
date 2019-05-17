@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <launch>
-	<node name="detect_peak_savecloud" pkg="hsd_pcl_tutorial" type="detect_peak_savecloud"/>
-	<!-- <node name="detect_peak" pkg="hsd_pcl_tutorial" type="detect_peak_new"/> -->
+	<node name="detect_peak_save_pc" pkg="intersection_recognition" type="detect_peak_save_pc"/>
+	
+	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" >
+		<remap from="/lcl" to="/estimated_pose/pose" />
+	</node>
 
-	<!-- <node name="save_velodyne_points" pkg="hsd_pcl_tutorial" type="conv_clouds" /> -->
-	<node name="save_velodyne_points" pkg="hsd_pcl_tutorial" type="save_velodyne_points_normal_odometry_for_paper" />
+	<node name="normal_curvature_pc_bottom" pkg="intersection_recognition" type="normal_curvature_pc_bottom"/>
 
-	<node name="hsd_normal_shimizu2" pkg="hsd_pcl_tutorial" type="hsd_normal_shimizu2"/>
-
-	<node name="intersection_shape_matching" pkg="hsd_pcl_tutorial" type="intersection_shape_matching" output="screen" >
-		<rosparam file="$(find params)/run_test/ignore_node.yaml" />
+	<node name="intersection_matching" pkg="intersection_recognition" type="intersection_matching" output="screen" >
+		<param name="edge_progress_threshold_max" type="double" value="1.2" />
+		<param name="edge_progress_threshold_min" type="double" value="0.8" />
 	</node>
 
 </launch>
