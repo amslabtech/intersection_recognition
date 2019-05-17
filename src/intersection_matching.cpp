@@ -143,6 +143,7 @@ void IntersectionMatching::peak_deg_callback(const std_msgs::Int32MultiArray::Pt
 {
 	peak_deg = *msg;
 	peak_deg_callback_flag = true;
+	std::cout << "peak_deg_callback_flag = true" << std::endl;
 }
 
 
@@ -150,6 +151,7 @@ void IntersectionMatching::estimated_pose_callback(const nav_msgs::OdometryConst
 {
 	estimated_pose = *msg;
 	estimated_pose_callback_flag = true;
+	std::cout << "estimated_pose_callback_flag = true" << std::endl;
 }
 
 
@@ -157,6 +159,7 @@ void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPt
 {
 	edge = *msg;
 	edge_callback_flag = true;
+	std::cout << "edge_callback_flag = true" << std::endl;
 }
 
 
