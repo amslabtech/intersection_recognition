@@ -59,7 +59,8 @@ public:
 	
 	void intersection_matching_manager(void);
 	
-	bool intersection_detect_mode_manager(void);
+	//bool intersection_detect_mode_manager(void);
+	void intersection_detect_mode_manager(void);
 	bool intersection_recognizer(void);
 	
 private:
@@ -128,12 +129,12 @@ void IntersectionMatching::intersection_matching_manager(void)
 
 	ros::Rate r(100);
 	while(ros::ok()){
-		if(peak_deg_callback_flag && estimated_pose_callback_flag && edge_callback_flag){
-			std::cout << "flags : true" << std::endl;
+		//if(peak_deg_callback_flag && estimated_pose_callback_flag && edge_callback_flag){
+			//std::cout << "flags : true" << std::endl;
 			//intersection_flag.data = ism.intersection_recognizer();
 			intersection_flag.data = intersection_recognizer();
 			intersection_flag_pub.publish(intersection_flag);
-		}
+		//}
 		r.sleep();
 		ros::spinOnce();
 	}
@@ -144,7 +145,7 @@ void IntersectionMatching::peak_deg_callback(const std_msgs::Int32MultiArray::Pt
 {
 	peak_deg = *msg;
 	peak_deg_callback_flag = true;
-	std::cout << "peak_deg_callback_flag = true" << std::endl;
+	//std::cout << "peak_deg_callback_flag = true" << std::endl;
 }
 
 
@@ -152,7 +153,7 @@ void IntersectionMatching::estimated_pose_callback(const nav_msgs::OdometryConst
 {
 	estimated_pose = *msg;
 	estimated_pose_callback_flag = true;
-	std::cout << "estimated_pose_callback_flag = true" << std::endl;
+	//std::cout << "estimated_pose_callback_flag = true" << std::endl;
 }
 
 
@@ -160,11 +161,12 @@ void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPt
 {
 	edge = *msg;
 	edge_callback_flag = true;
-	std::cout << "edge_callback_flag = true" << std::endl;
+	//std::cout << "edge_callback_flag = true" << std::endl;
 }
 
 
-bool IntersectionMatching::intersection_detect_mode_manager(void)
+//bool IntersectionMatching::intersection_detect_mode_manager(void)
+void IntersectionMatching::intersection_detect_mode_manager(void)
 {
 	if(edge.progress > edge_progress_threshold_min && edge.progress < edge_progress_threshold_max){ 
 		std::cout << "detect_mode" << std::endl;
@@ -174,12 +176,14 @@ bool IntersectionMatching::intersection_detect_mode_manager(void)
 		std::cout << "not detect_mode" << std::endl;
 	}
 	
-	return intersection_detect_mode_flag;
+	//return intersection_detect_mode_flag;
 }
 
 
 bool IntersectionMatching::intersection_recognizer(void)
 {
+	intersection_detect_mode_manager();
+
 	if(intersection_detect_mode_flag){
 		if(peak_deg.data.size() > 2){
 			std::cout << "intersection!!!!!!!!!!!!!!" << std::endl;
@@ -187,7 +191,7 @@ bool IntersectionMatching::intersection_recognizer(void)
 		}
 	}else{
 		intersection_recognize_flag = false;
-		std::cout << "not intersection :(" << std::endl;
+		//std::cout << "not intersection :(" << std::endl;
 	}
 
 	return intersection_recognize_flag;	

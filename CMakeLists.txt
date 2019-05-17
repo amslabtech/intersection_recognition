@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(intersection_recognition)
-SET(FAST_PCL_PACKAGES filters registration)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -17,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   tf
   nav_msgs
-  ${FAST_PCL_PACKAGES}
   amsl_navigation_managers
   amsl_navigation_msgs
   cmake_modules
@@ -133,7 +131,7 @@ find_package(PCL REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ceres_msgs
-CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs ${FAST_PCL_PACKAGES}
+CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs 
 #  DEPENDS system_lib
 )
 
