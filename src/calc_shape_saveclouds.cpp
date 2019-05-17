@@ -348,7 +348,8 @@ int main (int argc, char** argv)
     // ros::Subscriber sub = nh.subscribe ("/velodyne_points", 1, velodyne_cb);
     // ros::Subscriber sub = nh.subscribe ("/local_cloud", 1, static_callback);
     ros::Subscriber sub = nh.subscribe ("/save_cloud", 1, static_callback);
-	ros::Subscriber sub_lcl = n.subscribe("/lcl",1,OdomCallback);
+	//ros::Subscriber sub_lcl = n.subscribe("/odom",1,OdomCallback);
+	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
     // Create a ROS publisher for the output point cloud
     shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/detect_shape2", 1);
     // main handle

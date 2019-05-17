@@ -2,7 +2,9 @@
 <launch>
 	<node name="detect_peak_save_pc" pkg="intersection_recognition" type="detect_peak_save_pc"/>
 	
-	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" />
+	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" >
+		<remap from="/lcl" to="/estimated_pose/pose" />
+	</node>
 
 	<node name="normal_curvature_pc_bottom" pkg="intersection_recognition" type="normal_curvature_pc_bottom"/>
 

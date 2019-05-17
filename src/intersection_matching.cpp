@@ -54,7 +54,7 @@ public:
 	IntersectionMatching();
 
 	void peak_deg_callback(const std_msgs::Int32MultiArray::Ptr&);
-	//void estimated_pose_callback(const nav_msgs::OdometryConstPtr&);
+	void estimated_pose_callback(const nav_msgs::OdometryConstPtr&);
 	void edge_callback(const amsl_navigation_msgs::EdgeConstPtr&);
 	
 	void intersection_matching_manager(void);
@@ -116,7 +116,7 @@ IntersectionMatching::IntersectionMatching(void)
 	
 	peak_deg_sub = nh.subscribe("/peak/deg", 1, &IntersectionMatching::peak_deg_callback, this);
 	edge_sub = nh.subscribe("/edge/certain", 1, &IntersectionMatching::edge_callback, this);
-	//estimated_pose_sub = nh.subscribe("/estimated_pose/pose", 1, &IntersectionMatching::estimated_pose_callback, this);
+	estimated_pose_sub = nh.subscribe("/estimated_pose/pose", 1, &IntersectionMatching::estimated_pose_callback, this);
 
 	intersection_flag_pub = nh.advertise<std_msgs::Bool>("/intersection_flag", 1);
 }
@@ -129,6 +129,7 @@ void IntersectionMatching::intersection_matching_manager(void)
 	ros::Rate r(10);
 	while(ros::ok()){
 		if(peak_deg_callback_flag && estimated_pose_callback_flag && edge_callback_flag){
+			std::cout << "flags : true" << std::endl;
 			intersection_flag.data = ism.intersection_recognizer();
 			intersection_flag_pub.publish(intersection_flag);
 		}
@@ -144,13 +145,13 @@ void IntersectionMatching::peak_deg_callback(const std_msgs::Int32MultiArray::Pt
 	peak_deg_callback_flag = true;
 }
 
-/*
+
 void IntersectionMatching::estimated_pose_callback(const nav_msgs::OdometryConstPtr &msg)
 {
 	estimated_pose = *msg;
 	estimated_pose_callback_flag = true;
 }
-*/
+
 
 void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPtr &msg)
 {
@@ -162,9 +163,11 @@ void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPt
 bool IntersectionMatching::intersection_detect_mode_manager(void)
 {
 	if(edge.progress > edge_progress_threshold_min && edge.progress < edge_progress_threshold_max){ 
+		std::cout << "detect_mode" << std::endl;
 		intersection_detect_mode_flag = true;
 	}else{
 		intersection_detect_mode_flag = false;
+		std::cout << "not detect_mode" << std::endl;
 	}
 	
 	return intersection_detect_mode_flag;
@@ -175,10 +178,12 @@ bool IntersectionMatching::intersection_recognizer(void)
 {
 	if(intersection_detect_mode_flag){
 		if(peak_deg.data.size() > 2){
+			std::cout << "intersection!!!!!!!!!!!!!!" << std::endl;
 			intersection_recognize_flag = true;	
 		}
 	}else{
 		intersection_recognize_flag = false;
+		std::cout << "not intersection :(" << std::endl;
 	}
 
 	return intersection_recognize_flag;	
