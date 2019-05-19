@@ -1,10 +1,6 @@
 <?xml version="1.0"?>
 <launch>
 
-	<include file="$(find amsl_navigation_managers)/launch/amsl_navigation_managers.launch"/>
-
-	<include file="$(find node_edge_localizer)/launch/node_edge_localizer.launch"/>
-
 	<include file="$(find intersection_recognition)/launch/intersection_recognition.launch"/>
 
 	<test pkg="intersection_recognition" type="intersection_recognition_test" test-name="intersection_recognition_test"/> 
