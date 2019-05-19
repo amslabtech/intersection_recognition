@@ -5,6 +5,7 @@
 TEST(TestSuite, test0)
 {
 	ros::NodeHandle nh;
+	EXPECT_TRUE(true);
 }
 
 int main(int argc, char** argv)
