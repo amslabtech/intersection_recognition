@@ -12,9 +12,6 @@ RUN echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_releas
 
 RUN apt-get update
 
-RUN apt-get install -y ros-kinetic-pcl-ros \
-                       libpcl-dev
-
 WORKDIR /root
 
 # ROS setting
@@ -35,5 +32,6 @@ RUN ln -sf /usr/include/eigen3/Eigen /usr/include/Eigen
 # clone repository
 WORKDIR /root
 
+# dependencies
 RUN cd catkin_ws/src && git clone https://github.com/amslabtech/amsl_navigation_managers --depth=1
-RUN cd catkin_ws/src && git clone https://github.com/amslabtech/intersection_recognition --depth=1
+RUN cd catkin_ws/src && git clone https://github.com/amslabtech/node_edge_localizer --depth=1

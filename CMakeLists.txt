@@ -268,3 +268,12 @@ target_link_libraries(intersection_matching
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+if(CATKIN_ENABLE_TESTING)
+	find_package(rostest REQUIRED)
+	add_rostest_gtest(intersection_recognition_test 
+		test/intersection_recognition.test
+		test/intersection_recognition_test.cpp
+	)
+	target_link_libraries(intersection_recognition_test ${catkin_LIBRARIES})
+endif()
