@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   amsl_navigation_managers
   amsl_navigation_msgs
+  node_edge_map_interface
   cmake_modules
   pcl_ros
 )
@@ -43,8 +44,7 @@ find_package(PCL REQUIRED)
 ## Declare ROS messages, services and actions ##
 ################################################
 
-## To declare and build messages, services or actions from within this
-## package, follow these steps:
+## To declare and build messages, services or actions from within this ## package, follow these steps:
 ## * Let MSG_DEP_SET be the set of packages whose message types you use in
 ##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
 ## * In the file package.xml:
@@ -143,7 +143,7 @@ CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  # include
+  include
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
 )
@@ -217,6 +217,7 @@ add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 target_link_libraries(intersection_matching
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  node_edge_map_interface
 )
 
 
