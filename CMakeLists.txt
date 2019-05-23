@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   amsl_navigation_managers
   amsl_navigation_msgs
-  node_edge_map_interface
   cmake_modules
   pcl_ros
 )
