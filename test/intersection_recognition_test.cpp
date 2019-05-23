@@ -5,7 +5,7 @@
 TEST(TestSuite, test0)
 {
 	ros::NodeHandle nh;
-	EXPECT_TRUE(true);
+	EXPECT_EQ(M_PI, M_PI);
 }
 
 int main(int argc, char** argv)
