@@ -1,5 +1,5 @@
-//intersection_matchig
-//author : Yoshitaka Nagai
+//intersection_matching
+//author : AMSL
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
