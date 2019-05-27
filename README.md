@@ -1,5 +1,7 @@
 # intersection_recognition
 
+[![Build Status](https://travis-ci.org/amslabtech/intersection_recognition.svg?branch=master)](https://travis-ci.org/amslabtech/intersection_recognition)
+
 # Requirements
 - Eigen3
 - PCL(>=1.7)
