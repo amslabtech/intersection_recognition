@@ -26,27 +26,7 @@
 #include "amsl_navigation_msgs/Node.h"
 #include "amsl_navigation_msgs/Edge.h"
 #include "amsl_navigation_msgs/NodeEdgeMap.h"
-
-/*
-typedef pcl::PointXYZI PointI;
-typedef pcl::PointCloud<PointI> CloudI;
-typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
-
-typedef pcl::PointXYZINormal PointINormal;
-typedef pcl::PointCloud<PointINormal> CloudINormal;
-typedef pcl::PointCloud<PointINormal>::Ptr CloudINormalPtr;
-*/
-
-/*
-double get_yaw(geometry_msgs::Quaternion q)
-{
-	double r, p, y;
-	tf::Quaternion quat(q.x, q.y, q.z, q.w);
-	tf::Matrix3x3(quat).getRPY(r, p, y);
-	return y;
-}
-*/
-
+#include "amsl_navigation_managers/node_edge_map_interface.h"
 
 class IntersectionMatching
 {
@@ -56,15 +36,15 @@ public:
 	void peak_deg_callback(const std_msgs::Int32MultiArray::Ptr&);
 	void estimated_pose_callback(const nav_msgs::OdometryConstPtr&);
 	void edge_callback(const amsl_navigation_msgs::EdgeConstPtr&);
+	void node_edge_map_callback(const amsl_navigation_msgs::NodeEdgeMapConstPtr&);
 	
 	void intersection_matching_manager(void);
 	
-	//bool intersection_detect_mode_manager(void);
-	void intersection_detect_mode_manager(void);
+	bool intersection_detect_mode_manager(void);
+	//void intersection_detect_mode_manager(void);
 	bool intersection_recognizer(void);
 	
 private:
-	ros::NodeHandle nh, n;
 	
 	ros::Subscriber peak_deg_sub;
 	ros::Subscriber edge_sub;
@@ -78,15 +58,27 @@ private:
 	std_msgs::Bool intersection_flag;
 
 	amsl_navigation_msgs::Edge edge;
+	amsl_navigation_msgs::NodeEdgeMap node_edge_map;
 
-	float edge_progress_threshold_max;
-	float edge_progress_threshold_min;
+	double EDGE_PROGRESS_THRESHOLD_MAX;
+	double EDGE_PROGRESS_THRESHOLD_MIN;
+	double DISTANCE2NODE_THRESHOLD;
+	
+	float x_node;
+	float y_node;
+	float x_pose;
+	float y_pose;
+	float distance2node;
 
-	bool peak_deg_callback_flag;
-	bool estimated_pose_callback_flag;
-	bool edge_callback_flag;
-	bool intersection_detect_mode_flag;
-	bool intersection_recognize_flag;
+	int DETECT_MODE;
+	int next_node_id;
+
+	bool peak_deg_callback_flag = false;
+	bool estimated_pose_callback_flag = false;
+	bool edge_callback_flag = false;
+	bool node_edge_map_callback_flag = false;
+	bool intersection_detect_mode_flag = false;
+	bool intersection_recognize_flag = false;
 };
 
 
@@ -95,6 +87,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "intersection_matching");
 
+	
 	IntersectionMatching ism;
 	ism.intersection_matching_manager();
 
@@ -105,18 +98,17 @@ int main(int argc, char** argv)
 
 IntersectionMatching::IntersectionMatching(void)
 {
-	peak_deg_callback_flag = false;
-	estimated_pose_callback_flag = false;
-	edge_callback_flag = false;
-	intersection_detect_mode_flag = false;
-	intersection_recognize_flag = false;
-	intersection_flag.data = false;
-
-	n.getParam("edge_progress_threshold_max",edge_progress_threshold_max);
-	n.getParam("edge_progress_threshold_min",edge_progress_threshold_min);
+	//intersection_flag.data = false;
+	ros::NodeHandle n("~");
+	ros::NodeHandle nh;
+	
+	n.getParam("EDGE_PROGRESS_THRESHOLD_MAX",EDGE_PROGRESS_THRESHOLD_MAX);
+	n.getParam("EDGE_PROGRESS_THRESHOLD_MIN",EDGE_PROGRESS_THRESHOLD_MIN);
+	n.getParam("EDGE_PROGRESS_THRESHOLD_MIN",DISTANCE2NODE_THRESHOLD);
+	n.getParam("DETECT_MODE",DETECT_MODE);
 	
 	peak_deg_sub = nh.subscribe("/peak/deg", 1, &IntersectionMatching::peak_deg_callback, this);
-	edge_sub = nh.subscribe("/edge/certain", 1, &IntersectionMatching::edge_callback, this);
+	edge_sub = nh.subscribe("/estimated_pose/edge", 1, &IntersectionMatching::edge_callback, this);
 	estimated_pose_sub = nh.subscribe("/estimated_pose/pose", 1, &IntersectionMatching::estimated_pose_callback, this);
 
 	intersection_flag_pub = nh.advertise<std_msgs::Bool>("/intersection_flag", 1);
@@ -129,12 +121,13 @@ void IntersectionMatching::intersection_matching_manager(void)
 
 	ros::Rate r(100);
 	while(ros::ok()){
-		//if(peak_deg_callback_flag && estimated_pose_callback_flag && edge_callback_flag){
+		if(peak_deg_callback_flag && estimated_pose_callback_flag && edge_callback_flag){
 			//std::cout << "flags : true" << std::endl;
-			//intersection_flag.data = ism.intersection_recognizer();
+			std::cout << "DETECT_MODE : " << DETECT_MODE << std::endl;
 			intersection_flag.data = intersection_recognizer();
+			std::cout << "intersection_recognized" << std::endl;
 			intersection_flag_pub.publish(intersection_flag);
-		//}
+		}
 		r.sleep();
 		ros::spinOnce();
 	}
@@ -160,29 +153,76 @@ void IntersectionMatching::estimated_pose_callback(const nav_msgs::OdometryConst
 void IntersectionMatching::edge_callback(const amsl_navigation_msgs::EdgeConstPtr &msg)
 {
 	edge = *msg;
+	
+	
+	//std::cout << "edge_callback_flag = false" << std::endl;
+
+	next_node_id = edge.node1_id;
 	edge_callback_flag = true;
+	
 	//std::cout << "edge_callback_flag = true" << std::endl;
+	//std::cout << "next_node_id : " << next_node_id << std::endl;
+	std::cout << "edge_callback_flag = true" << std::endl;
+}
+
+void IntersectionMatching::node_edge_map_callback(const amsl_navigation_msgs::NodeEdgeMapConstPtr &msg)
+{
+	node_edge_map = *msg;
+	node_edge_map_callback_flag = true;
+	//std::cout << "node_edge_map_callback_flag = true" << std::endl;
 }
 
 
-//bool IntersectionMatching::intersection_detect_mode_manager(void)
-void IntersectionMatching::intersection_detect_mode_manager(void)
+bool IntersectionMatching::intersection_detect_mode_manager(void)
+//void IntersectionMatching::intersection_detect_mode_manager(void)
 {
-	if(edge.progress > edge_progress_threshold_min && edge.progress < edge_progress_threshold_max){ 
-		std::cout << "detect_mode" << std::endl;
-		intersection_detect_mode_flag = true;
-	}else{
-		intersection_detect_mode_flag = false;
-		std::cout << "not detect_mode" << std::endl;
+	std::cout << "detect_mode switching" << std::endl;
+	bool detect_mode_flag = false;
+
+	switch(DETECT_MODE){
+		case 1:
+			if(edge.progress > (float)EDGE_PROGRESS_THRESHOLD_MIN && edge.progress < (float)EDGE_PROGRESS_THRESHOLD_MAX){ 
+				std::cout << "detect_mode" << std::endl;
+				detect_mode_flag = true;
+			}else{
+				detect_mode_flag = false;
+				std::cout << "not detect_mode" << std::endl;
+			}
+			break;	
+		
+		case 2:
+			x_pose = estimated_pose.pose.pose.position.x;
+			y_pose = estimated_pose.pose.pose.position.y;
+			std::cout << "pose" << std::endl;
+		
+			int next_node_index = 0;
+			//int next_node_index = NodeEdgeMapInterface::get_node_index_from_id(next_node_id);
+			x_node = (float)node_edge_map.nodes[next_node_index].point.x;
+			y_node = (float)node_edge_map.nodes[next_node_index].point.y;
+			std::cout << "node" << std::endl;
+
+			distance2node = sqrt(pow(x_node - x_pose, 2) + pow(y_node - y_pose, 2));
+			std::cout << "distance2nonde" << distance2node << std::endl;
+
+			if(distance2node > (float)DISTANCE2NODE_THRESHOLD){
+				std::cout << "detect_mode" << std::endl;
+				detect_mode_flag = true;
+			}else{
+				detect_mode_flag = false;
+				std::cout << "not detect_mode" << std::endl;
+			}
+			break;
 	}
-	
-	//return intersection_detect_mode_flag;
+	return detect_mode_flag;
 }
 
 
 bool IntersectionMatching::intersection_recognizer(void)
 {
-	intersection_detect_mode_manager();
+	//intersection_detect_mode_manager();
+	intersection_detect_mode_flag = intersection_detect_mode_manager();
+	
+	std::cout << "mode managemented" << std::endl;
 
 	if(intersection_detect_mode_flag){
 		if(peak_deg.data.size() > 2){

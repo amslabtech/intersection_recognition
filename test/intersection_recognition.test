@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+	<include file="$(find intersection_recognition)/launch/intersection_recognition.launch"/>
+
+	<test pkg="intersection_recognition" type="intersection_recognition_test" test-name="intersection_recognition_test"/> 
+
+</launch>
