@@ -219,8 +219,6 @@ target_link_libraries(intersection_matching
   node_edge_map_interface
 )
 
-
-
 #############
 ## Install ##
 #############
