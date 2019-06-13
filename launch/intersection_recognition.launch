@@ -4,13 +4,14 @@
 	
 	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" >
 		<remap from="/lcl" to="/estimated_pose/pose" />
+		<remap from="/local_cloud" to="/rm_cluster/removed_points" />
 	</node>
 
 	<node name="normal_curvature_pc_bottom" pkg="intersection_recognition" type="normal_curvature_pc_bottom"/>
 
 	<node name="intersection_matching" pkg="intersection_recognition" type="intersection_matching" output="screen" >
 		<!-- 	MODE1:EDGE_PROGRESS, MODE2:ESTIMATED_POSE	 -->
-		<param name="DETECT_MODE" type="int" value="2" />
+		<param name="DETECT_MODE" type="int" value="1" />
 		<!-- 	MODE1	 -->
 		<param name="EDGE_PROGRESS_THRESHOLD_MAX" type="double" value="1.2" />
 		<param name="EDGE_PROGRESS_THRESHOLD_MIN" type="double" value="0.8" />
