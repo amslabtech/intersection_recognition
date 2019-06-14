@@ -220,7 +220,7 @@ void normal_cb(const sensor_msgs::PointCloud2ConstPtr& msg)
 int main (int argc, char** argv)
 {
     // Initialize ROS
-    ros::init (argc, argv, "hsd_normal_shimizu2");
+    ros::init (argc, argv, "normal_curvature_pc_bottom");
     ros::NodeHandle nh;
     ros::NodeHandle n;
 

@@ -26,6 +26,9 @@
 #include <Eigen/SVD>
 #include <omp.h>
 
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+
 
 using namespace Eigen;
 using namespace std;	
@@ -183,7 +186,17 @@ void OdomCallback(const nav_msgs::Odometry input){
 	d_y = input.pose.pose.position.y;
 	d_z = 0.0;
 	old_yaw = angle_z_;
-	angle_z_ = input.pose.pose.orientation.z;
+	
+	double qx = input.pose.pose.orientation.x;
+	double qy = input.pose.pose.orientation.y;
+	double qz = input.pose.pose.orientation.z;
+	double qw = input.pose.pose.orientation.w;
+	double R=0.0, P=0.0, Y=0.0;
+	tf::Quaternion tf_quaternion(qx, qy, qz, qw);
+	tf::Matrix3x3 tf_matrix(tf_quaternion);
+	tf_matrix.getRPY(R, P, Y);
+	angle_z_ = Y;
+	//angle_z_ = input.pose.pose.orientation.z;
 
 	odom_callback = true;
 }
@@ -197,20 +210,20 @@ void MnckCallback(const std_msgs::Float64 msg){
 
 int main (int argc, char** argv)
 {
-	ros::init(argc, argv, "save_velodyne_points");
+	ros::init(argc, argv, "save_velodyne_normal_pc_odom");
   	ros::NodeHandle n;
     ros::NodeHandle nh;
 	
 	size_t max_size = 0;
 
     ros::Subscriber sub = nh.subscribe ("/local_cloud", 1, static_callback);
-	ros::Subscriber sub_lcl = n.subscribe("/lcl",1,OdomCallback);
-	ros::Subscriber sub_zed = n.subscribe("/zed_grasspoints",1,ZedCallback); //必要？
-	ros::Subscriber sub_intensity = n.subscribe("/velodyne_points/inte",1,IntensityCallback);
-	ros::Subscriber sub_mnck = n.subscribe("/flag/diff",1,MnckCallback);//???
+	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
+	//ros::Subscriber sub_zed = n.subscribe("/zed_grasspoints",1,ZedCallback); //必要？
+	//ros::Subscriber sub_intensity = n.subscribe("/velodyne_points/inte",1,IntensityCallback);
+	//ros::Subscriber sub_mnck = n.subscribe("/flag/diff",1,MnckCallback);//???
     
-    shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/save_cloud", 1);
-    debug_pub = nh.advertise<sensor_msgs::PointCloud2> ("/zed_debug", 1);
+    shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/save_cloud", 1);
+    //debug_pub = nh.advertise<sensor_msgs::PointCloud2> ("/zed_debug", 1);
 
 	CloudAPtr conv_cloud (new CloudA);
 	CloudAPtr conv_zed_cloud (new CloudA);

@@ -23,6 +23,9 @@
 #include <pcl/filters/passthrough.h>
 #include <omp.h>
 
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+
 using namespace std;
 using namespace Eigen;
 
@@ -324,14 +327,24 @@ void static_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 	/* cout<<"in"<<endl; */
 }
 
-double abs_x = 0.0,abs_y = 0.0,abs_yaw = 0.0;
+double abs_x = 0.0,abs_y = 0.0, abs_z = 0.0, abs_w = 0.0, abs_yaw = 0.0;
+double R = 0.0, P = 0.0, Y = 0.0;
 void OdomCallback(const nav_msgs::Odometry input)
 {
 	/* cout << "odom_callback "; */
 	current_time = input.header.stamp;
 	abs_x = input.pose.pose.position.x;
 	abs_y = input.pose.pose.position.y;
-	abs_yaw = input.pose.pose.orientation.z;
+	double qx = input.pose.pose.orientation.x;
+	double qy = input.pose.pose.orientation.y;
+	double qz = input.pose.pose.orientation.z;
+	double qw = input.pose.pose.orientation.w;
+
+	tf::Quaternion tf_quaternion(qx, qy, qz, qw);
+	tf::Matrix3x3 tf_matrix(tf_quaternion);
+	tf_matrix.getRPY(R, P, Y);
+	abs_yaw = Y;
+	//abs_yaw = input.pose.pose.orientation.z;
 
 	odom_callback = true;
 	/* cout<<"in"<<endl; */
@@ -340,18 +353,18 @@ void OdomCallback(const nav_msgs::Odometry input)
 int main (int argc, char** argv)
 {
     // Initialize ROS
-    ros::init (argc, argv, "calc_shape_savecloud");
+    ros::init (argc, argv, "calc_shape_saveclouds");
     ros::NodeHandle nh;
     ros::NodeHandle n;
 
     // Create a ROS subscriber for the input point cloud
     // ros::Subscriber sub = nh.subscribe ("/velodyne_points", 1, velodyne_cb);
     // ros::Subscriber sub = nh.subscribe ("/local_cloud", 1, static_callback);
-    ros::Subscriber sub = nh.subscribe ("/save_cloud", 1, static_callback);
+    ros::Subscriber sub = nh.subscribe ("/intersection_recognition/save_cloud", 1, static_callback);
 	//ros::Subscriber sub_lcl = n.subscribe("/odom",1,OdomCallback);
 	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
     // Create a ROS publisher for the output point cloud
-    shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/detect_shape2", 1);
+    shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/detect_shape2", 1);
     // main handle
     ros::Rate loop_rate(20);
     while (ros::ok()){

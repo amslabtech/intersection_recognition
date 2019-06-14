@@ -3,7 +3,6 @@
 	<node name="detect_peak_save_pc" pkg="intersection_recognition" type="detect_peak_save_pc"/>
 	
 	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" >
-		<remap from="/lcl" to="/estimated_pose/pose" />
 		<remap from="/local_cloud" to="/rm_cluster/removed_points" />
 	</node>
 
