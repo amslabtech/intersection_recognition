@@ -427,19 +427,19 @@ void Shape_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 int main (int argc, char** argv)
 {
     // Initialize ROS
-    ros::init (argc, argv, "detect_peak_savecloud");
+    ros::init (argc, argv, "detect_peak_save_pc");
     ros::NodeHandle nh;
     ros::NodeHandle n;
 
     // Create a ROS subscriber for the input point cloud
     // ros::Subscriber sub = nh.subscribe ("/velodyne_points", 1, velodyne_cb);
-    ros::Subscriber sub = nh.subscribe ("/detect_shape2", 1, Shape_callback);
+    ros::Subscriber sub = nh.subscribe ("/intersection_recognition/detect_shape2", 1, Shape_callback);
     // Create a ROS publisher for the output point cloud
-    peak_pub = nh.advertise<sensor_msgs::PointCloud2> ("/detect_peak2", 1);
+    peak_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/detect_peak2", 1);
 	marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker/long", 10);
 	marker2_pub = n.advertise<visualization_msgs::Marker>("visualization_marker/short", 10);
-	deg_pub = n.advertise<std_msgs::Int32MultiArray>("/peak/deg", 10);
-	road_pub = n.advertise<std_msgs::Int32MultiArray>("/road/deg", 10);
+	deg_pub = n.advertise<std_msgs::Int32MultiArray>("/intersection_recognition/peak_deg", 10);
+	road_pub = n.advertise<std_msgs::Int32MultiArray>("/intersection_recognition/road_deg", 10);
     // main handle
     ros::Rate loop_rate(20);
     while (ros::ok()){

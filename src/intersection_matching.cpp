@@ -107,7 +107,7 @@ IntersectionMatching::IntersectionMatching(void)
 	n.getParam("EDGE_PROGRESS_THRESHOLD_MIN",DISTANCE2NODE_THRESHOLD);
 	n.getParam("DETECT_MODE",DETECT_MODE);
 	
-	peak_deg_sub = nh.subscribe("/peak/deg", 1, &IntersectionMatching::peak_deg_callback, this);
+	peak_deg_sub = nh.subscribe("/intersection_recognition/peak_deg", 1, &IntersectionMatching::peak_deg_callback, this);
 	edge_sub = nh.subscribe("/estimated_pose/edge", 1, &IntersectionMatching::edge_callback, this);
 	estimated_pose_sub = nh.subscribe("/estimated_pose/pose", 1, &IntersectionMatching::estimated_pose_callback, this);
 
