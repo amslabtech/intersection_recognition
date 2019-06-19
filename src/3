@@ -1,0 +1,218 @@
+#include <iostream>
+
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/point_types.h>
+//#include <pcl/io/pcd_io.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
+
+
+typedef pcl::PointXYZI PointI;
+typedef pcl::PointCloud<PointI> CloudI;
+typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
+CloudIPtr input_pc_ (new CloudI);
+CloudIPtr cloud_f_ (new CloudI);
+CloudIPtr cloud_filtered_ (new CloudI);
+CloudIPtr cloud_plane_ (new CloudI);
+CloudIPtr distribution_filtered_pc_ (new CloudI);
+
+typedef pcl::PointIndices PointtIndices;
+typedef pcl::PointIndices::Ptr PointtIndicesPtr;
+PointIndicesPtr inliers_ (new PointIndices);
+
+typedef pcl::ModelCoefficients Mdl_Coefficients;
+typedef pcl::ModelCoefficients::Ptr MdlcoefficientsPtr;
+MdlcoefficientsPtr coefficients_ (new Mdl_Coefficients);
+
+typedef pcl::search::KdTree<PointI> searchKdTree;
+typedef pcl::search::KdTree<PointI>::Ptr searchKdTreePtr;
+searchKdTreePtr tree_ (new searchKdTree);
+
+pcl::VoxelGrid<PointI> vg;
+
+pcl::SACSegmentation<PointI> seg;
+
+pcl::ExtractIndices<PointI> extract;
+
+pcl::EuclideanClusterExtraction<PointI> ec;
+
+std::vector<PointIndices> cluster_indices;
+
+std::vector<CloudIPtr> Clustered_PC_List;
+
+class EuclideanCluster
+{
+	public:
+		EuclideanCluster();
+		
+		void filter(void);
+		void pc_callback(const sensor_msgs::PointCloud2ConstPtr&);
+		void pc_downsample(void);
+		void pc_extract(void);
+		std::vector<CloudIPtr> clustered_pc_represent(void);
+
+	private:
+		bool pc_callback_flag = false;
+		bool downsample_flag = false;
+
+		int max_itr = 100;
+		int Hz = 100;
+		int min_cluster_size = 100;
+		int max_cluster_size = 25000;
+
+		double leaf_size_x = 0.01f;
+		double leaf_size_y = 0.01f;
+		double leaf_size_z = 0.01f;
+		double dist_threshold = 0.02;
+		double downsample_rate = 0.3;
+		double cluster_tolerance = 0.02;
+		
+		ros::Subscriber sub_pc;
+		ros::Publisher pub_pc;
+}
+
+
+int main(int argc, char** argv)
+{
+	ros::init(argc, argv, "euclidean_cluster_distribution_filter");
+	
+	EuclideanCluster 
+}
+
+
+EuclideanCluster::EuclideanCluster()
+{
+	ros::NodeHandle n;
+	ros::NodeHandle nh("~");
+
+	sub_pc = n.subscribe("/rm_cluster/removed_points", 10, &EuclideanCluster::pc_callback, this);
+	pub_pc = n.advertise<sensor_msgs::PointCloud2>("/intersection_recognition/EC_ditribution_filtered", 10);
+	
+	/*
+	nh.getParam("leaf_size_x", leaf_size_x);
+	nh.getParam("leaf_size_y", leaf_size_x);
+	nh.getParam("leaf_size_z", leaf_size_x);
+	nh.getParam("dist_threshold", dist_threshold);	
+	nh.getParam("downsample_rate", downsample_rate);
+	nh.getParam("cluster_tolerance", cluster_tolerance);
+	nh.getParam("min_cluster_size", min_cluster_size);
+	nh.getParam("max_cluster_size", max_cluster_size);
+	*/
+
+	//set parameters
+	seg.setOptimizeCoefficients(true);
+	seg.setModelType(pcl::SACMODEL_PLANE);
+	seg.setMethodType(pcl::SAC_RANSAC);
+	seg.setMaxIterations(max_itr);
+	seg.setDistanceThreshold(dist_threshold);
+}
+
+
+void EuclideanCluster::filter(void)
+{
+	ros::Rate r(Hz);
+	while(ros::ok()){
+		if(pc_callback_flag){
+			pc_downsample();
+			pc_extract();
+			Clustered_PC_List = clustered_pc_represent();
+
+		}
+		r.sleep();
+		ros::spinOnce();
+	}
+}
+
+
+void EuclideanCluster::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg)
+{
+	pcl::fromROSMsg(*msg, *input_pc_);
+	
+	pc_callback_flag = true;
+}
+
+
+void EuclideanCluster::pc_downsample(void)
+{
+	// Create the filtering object: downsample the dataset using each leaf size
+	vg.setInputCloud(input_pc_);
+	vg.setLeafsize(leaf_size_x, leaf_size_y, leaf_size_z);
+	vg.filter(*cloud_filtered_);
+}
+
+
+void EuclideanCluster::pc_extract(void)
+{
+	int i = 0;
+	int nr_points = (int)cloud_filtered_->points.size();
+
+	while(cloud_filtered_->points.size() > downsample_rate * nr_points){
+		// Segment the largest planar component from the remaining cloud
+		seg.InputCloud(cloud_filtered_);
+		seg.segment(*inliers_, *coefficients_);
+		if(inliers_->points.size() == 0){
+			std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
+			break;
+		}
+
+		// Extract the planar inliers from the input cloud
+		extract.setInputCloud(cloud_filtered_);
+		extract.setIndices(inliers_);
+		extract.setNegative(false);
+
+		// Get the points associated with the planar surface
+		extract.filter(*cloud_plane_);
+
+		// Remove the planar inliers, extract the rest
+		extract.setNegative(true);
+		extract.filter(*cloud_f_);
+		*cloud_filtered_ = *cloud_f_;
+
+		// Creating the KdTree object for the search method of the extraction
+		tree_->setInputCloud(cloud_filtered_);
+		ec.setClusterTolerance();
+		ec.setMinClusterSize(min_cluster_size);
+		ec.setMaxClusterSize(max_cluster_size);
+		ec.setSearchMethod(tree_);
+		ec.setInputCloud(cloud_filtered_);
+		ec.extract(cluster_indices);
+	}
+}
+
+
+std::vector<CloudIPtr> EuclideanCluster::clustered_pc_represent(void)
+{
+	int j = 0;
+	std::vector<PointIndices>::const_iterator it;
+	std::vector<CloudIPtr> clustered_pc_list;
+	for(it = cluster_indices.begin(); it != cluster_indices.end(); ++it){
+		CloudIPtr cloud_cluster_ (new CloudI);
+		for(std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit){
+			cloud_cluster_->points.push_back(cloud_filtered_->points[*pit]);
+		}
+		cloud_cluster_->width = cloud_cluster_->points.size();
+		cloud_cluster_->height = 1;
+		cloud_cluster_->is_dense = true;
+
+		clustered_pc_list.push_back(cloud_cluster_);
+	}
+	
+	return clustered_pc_list;
+}
+
+
+CloudIPtr EuclideanCluster::distribution_filter(std::vector<CloudIPtr> clusteredi_PC_list)
+{
+	
+}

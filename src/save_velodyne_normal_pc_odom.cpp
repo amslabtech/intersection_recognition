@@ -216,7 +216,7 @@ int main (int argc, char** argv)
 	
 	size_t max_size = 0;
 
-    ros::Subscriber sub = nh.subscribe ("/local_cloud", 1, static_callback);
+    ros::Subscriber sub = nh.subscribe ("/intersection_recognition/EC_distribution_filtered_pc", 1, static_callback);
 	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
 	//ros::Subscriber sub_zed = n.subscribe("/zed_grasspoints",1,ZedCallback); //必要？
 	//ros::Subscriber sub_intensity = n.subscribe("/velodyne_points/inte",1,IntensityCallback);

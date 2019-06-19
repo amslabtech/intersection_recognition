@@ -190,6 +190,13 @@ target_link_libraries(normal_curvature_pc_bottom
   ${PCL_LIBRARIES}
 )
 
+add_executable(euclidean_cluster_distribution_filter src/euclidean_cluster_distribution_filter.cpp)
+add_dependencies(euclidean_cluster_distribution_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(euclidean_cluster_distribution_filter
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+
 add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
 add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(save_velodyne_normal_pc_odom
