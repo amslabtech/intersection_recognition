@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   amsl_navigation_msgs
   cmake_modules
   pcl_ros
+  #amsl_recog_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -190,6 +191,13 @@ target_link_libraries(normal_curvature_pc_bottom
   ${PCL_LIBRARIES}
 )
 
+add_executable(euclidean_cluster_distribution_filter src/euclidean_cluster_distribution_filter.cpp)
+add_dependencies(euclidean_cluster_distribution_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(euclidean_cluster_distribution_filter
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+
 add_executable(save_velodyne_normal_pc_odom src/save_velodyne_normal_pc_odom.cpp)
 add_dependencies(save_velodyne_normal_pc_odom ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(save_velodyne_normal_pc_odom
@@ -218,6 +226,23 @@ target_link_libraries(intersection_matching
   ${PCL_LIBRARIES}
   node_edge_map_interface
 )
+
+# add_executable(pickup_cluster src/pickup_cluster.cpp)
+# add_dependencies(pickup_cluster ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(pickup_cluster
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   node_edge_map_interface
+# )
+#
+# add_executable(clustering src/clustering.cpp)
+# add_dependencies(clustering ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(clustering
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   node_edge_map_interface
+# )
+
 
 #############
 ## Install ##
