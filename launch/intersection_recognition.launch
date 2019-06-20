@@ -17,10 +17,10 @@
 		<param name="pt_dist_threshold" type="double" value="2.0" />
 	</node>
 	
-	<!-- <node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" > -->
-	<!-- 	<remap from="/local_cloud" to="/intersection_recognition/EC_distribution_filtered_pc" /> -->
-	<!-- 	<!&#45;&#45; <remap from="/local_cloud" to="/rm_cluster/removed_points" /> &#45;&#45;> -->
-	<!-- </node> -->
+	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom">
+		<param name="cloud_size_threshold" type="int" value="700000" />
+		<!-- <remap from="/local_cloud" to="/rm_cluster/removed_points" /> -->
+	</node>
 
 	<node name="normal_curvature_pc_bottom" pkg="intersection_recognition" type="normal_curvature_pc_bottom"/>
 

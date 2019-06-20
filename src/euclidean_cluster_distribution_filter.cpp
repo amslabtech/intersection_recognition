@@ -146,11 +146,12 @@ void EuclideanCluster::filter(void)
 			std::cout << "Clustered_PC_List size : " << Clustered_PC_List.size() << std::endl;
 			*distribution_filtered_pc_ = *distribution_filter(Clustered_PC_List);
 			distribution_filtered_pc_->header.stamp = input_pc_->header.stamp;
+			distribution_filtered_pc_->header.frame_id = input_pc_->header.frame_id;
 			pcl::toROSMsg(*distribution_filtered_pc_, pc_for_pub);
 			//pc_for_pub.header.stamp = input_pc_->header.stamp;
 			//pc_for_pub.header.stamp = ros::Time::now();
 			//pc_for_pub.header.frame_id = input_pc_->header.frame_id;
-			pc_for_pub.header.frame_id = "map";
+			//pc_for_pub.header.frame_id = "map";
 			pub_pc.publish(pc_for_pub);
 			std::cout << "published" << std::endl;
 		}

@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   amsl_navigation_msgs
   cmake_modules
   pcl_ros
+  amsl_recog_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -225,6 +226,23 @@ target_link_libraries(intersection_matching
   ${PCL_LIBRARIES}
   node_edge_map_interface
 )
+
+add_executable(pickup_cluster src/pickup_cluster.cpp)
+add_dependencies(pickup_cluster ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pickup_cluster
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  node_edge_map_interface
+)
+
+add_executable(clustering src/clustering.cpp)
+add_dependencies(clustering ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(clustering
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  node_edge_map_interface
+)
+
 
 #############
 ## Install ##

@@ -73,6 +73,7 @@ inline bool Odometry_threshold(double &s_x,double &s_y,double &x,double &y)
 	}
 }
 
+/*
 inline void Copy_point(PointA& org,PointA& save)
 {
 	if(fabs(angle_z_-old_yaw)<0.01){
@@ -86,6 +87,7 @@ inline void Copy_point(PointA& org,PointA& save)
 		save.curvature = org.curvature;
 	}
 }
+*/
 
 void cnv(CloudAPtr org, CloudAPtr rsl, 
 		 double dx, double dy, double dz, double angle_x, double angle_y, double angle_z)
@@ -134,51 +136,6 @@ void static_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 	points_callback = true;
 }
 
-double Distance_zed(PointA zed){
-	double x = zed.x;
-	double y = zed.y;
-	double distance = sqrt(pow(x,2)+pow(y,2));
-
-	return distance;
-}
-
-bool zed_flag = false;
-
-CloudAPtr zed_cloud (new CloudA);
-
-void ZedCallback(sensor_msgs::PointCloud2 input){
-		sensor_msgs::PointCloud2 pc2;
-		CloudAPtr zed_in (new CloudA);
-		CloudAPtr zed_in2 (new CloudA);
-		pcl::fromROSMsg(input,*zed_in);
-		zed_flag = true;
-
-		for(size_t i = 0;i<zed_in->points.size();i++){
-			if(zed_in->points[i].z<-0.15){
-				if(Distance_zed(zed_in->points[i])<10.0){
-					zed_in2->push_back(zed_in->points[i]);
-				}
-			}
-		}
-	
-		pcl::VoxelGrid<pcl::PointXYZINormal> vg;  
-		vg.setInputCloud (zed_in2);  
-		vg.setLeafSize (0.015f, 0.015f, 0.015f);
-		vg.filter (*zed_cloud);
-}
-
-bool intensity_flag = false;
-CloudAPtr intensity_cloud(new CloudA);
-void IntensityCallback(sensor_msgs::PointCloud2 msg)
-{
-	CloudAPtr intensity_tmp(new CloudA);
-	pcl::fromROSMsg(msg,*intensity_tmp);
-	pcl::VoxelGrid<pcl::PointXYZINormal> vg;  
-	vg.setInputCloud (intensity_tmp);  
-	vg.setLeafSize (0.1f, 0.1f, 0.1f);
-	vg.filter (*intensity_cloud);
-	intensity_flag = true;
-}
 
 void OdomCallback(const nav_msgs::Odometry input){
 	current_time = input.header.stamp;
@@ -200,105 +157,68 @@ void OdomCallback(const nav_msgs::Odometry input){
 
 	odom_callback = true;
 }
-CloudAPtr save_cloud (new CloudA);
-double diff_yaw = 0.0;
-void MnckCallback(const std_msgs::Float64 msg){
-	// diff_yaw = msg.data;
-	save_cloud->points.clear();
-	save_cloud->resize(SAVE_SIZE * loop);
-}
+
 
 int main (int argc, char** argv)
 {
 	ros::init(argc, argv, "save_velodyne_normal_pc_odom");
   	ros::NodeHandle n;
-    ros::NodeHandle nh;
-	
-	size_t max_size = 0;
+    ros::NodeHandle nh("~");
+
+	int cloud_size_threshold;
+	nh.getParam("cloud_size_threshold", cloud_size_threshold);
 
     ros::Subscriber sub = nh.subscribe ("/intersection_recognition/EC_distribution_filtered_pc", 1, static_callback);
 	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
-	//ros::Subscriber sub_zed = n.subscribe("/zed_grasspoints",1,ZedCallback); //必要？
-	//ros::Subscriber sub_intensity = n.subscribe("/velodyne_points/inte",1,IntensityCallback);
-	//ros::Subscriber sub_mnck = n.subscribe("/flag/diff",1,MnckCallback);//???
     
     shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/save_cloud", 1);
-    //debug_pub = nh.advertise<sensor_msgs::PointCloud2> ("/zed_debug", 1);
 
 	CloudAPtr conv_cloud (new CloudA);
-	CloudAPtr conv_zed_cloud (new CloudA);
-	CloudAPtr conv_intensity_cloud (new CloudA);
-	save_cloud->resize(SAVE_SIZE * loop);
-	
+	CloudAPtr save_cloud (new CloudA);
+	//save_cloud->resize(SAVE_SIZE * loop);
+	//save_cloud->resize(SAVE_SIZE);
+	int cloud_size_diff = 0;
 	int save_count = 0;
 	double saveodom_x = 0.0;
 	double saveodom_y = 0.0;
 	
 	ros::Rate loop_rate(10);
 	while (ros::ok()){
+		std::cout << "while() start" << std::endl;
 		if(odom_callback && points_callback){
+			std::cout << "flags ok and next cnv" << std::endl;
 			odom_callback = false;
 			points_callback = false;
+			
 			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			if(zed_flag){
-				// cout<<"zed_convert"<<endl;
-				cnv(zed_cloud, conv_zed_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			}
-			if(intensity_flag){
-				// cout<<"intensity_points_convert"<<endl;
-				cnv(intensity_cloud, conv_intensity_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			}
 			CloudA pub_cloud;
-			size_t cloud_size = conv_cloud->points.size();
-			size_t cloud_zed_size = conv_zed_cloud->points.size();
-			size_t cloud_intensity_size = conv_intensity_cloud->points.size();
-			if(max_size<cloud_size){
-				max_size = cloud_size;
+			int cloud_size = (int)conv_cloud->points.size();
+			cloud_size_diff = cloud_size - cloud_size_threshold;
+			/////////////////////save_cloud/////////////////////////
+			cout<<"conv cloud size : "<<cloud_size<<endl;
+			
+			if(cloud_size_diff > 0){
+				conv_cloud->points.erase(conv_cloud->points.begin(), conv_cloud->points.begin() + cloud_size_diff);
+				std::cout << "resized conv_cloud size : " << conv_cloud->points.size() << std::endl;
 			}
 			
-			/////////////////////save_cloud/////////////////////////
-			// cout<<"minmax_point save!!!!!!"<<cloud_size<<endl;
+			/*
 			for(size_t i=0;i<cloud_size;i++){
 				Copy_point(conv_cloud->points[i],save_cloud->points[SAVE_SIZE*save_count+i]);
 			}
-			
-			if(zed_flag){
-				// cout<<"zed_point save!!!!!!"<<cloud_zed_size<<endl;
-				for(size_t i = 0;i<cloud_zed_size;i++){
-					Copy_point(conv_zed_cloud->points[i],save_cloud->points[SAVE_SIZE*save_count+i+cloud_size]);
-				}
-				zed_flag = false;
-			}
-			if(intensity_flag){
-				// cout<<"intensity_point save!!!!!!"<<cloud_intensity_size<<endl;
-				for(size_t i = 0;i<cloud_intensity_size;i++){
-					Copy_point(conv_intensity_cloud->points[i],save_cloud->points[SAVE_SIZE*save_count+i+cloud_size+cloud_zed_size]);
-				}
-			}
-			PointA surplus;
-			surplus.x = 0;
-			surplus.y = 0;
-			surplus.z = 0;
-			omp_set_num_threads(4);
-			#pragma omp parallel for
-			for(size_t i = SAVE_SIZE*save_count+cloud_size+cloud_zed_size+cloud_intensity_size;i<SAVE_SIZE*(save_count+1);i++){
-				Copy_point(surplus,save_cloud->points[i]);
-			}
+			*/
+			*save_cloud = *conv_cloud;
 			
 			///////////////////save_cloud/////////////////////////
 			// omp_set_num_threads(4);
 			// #pragma omp parallel for
-			for(size_t i=0;i<SAVE_SIZE*loop;i++){
-				pub_cloud.push_back(save_cloud->points[i]);
-			}
 			if(Odometry_threshold(saveodom_x,saveodom_y,d_x,d_y)){
 				save_count++;
 				save_count = save_count%loop;
 				saveodom_x = d_x;
 				saveodom_y = d_y;
-				intensity_flag = false;
 			}
-			pubPointCloud2(shape_pub,pub_cloud,"/map",current_time);
+			pubPointCloud2(shape_pub,*save_cloud,"/map",current_time);
 		}
         ros::spinOnce();
         loop_rate.sleep();
