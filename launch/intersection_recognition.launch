@@ -2,6 +2,8 @@
 <launch>
 	<node name="detect_peak_save_pc" pkg="intersection_recognition" type="detect_peak_save_pc"/>
 	
+	<node name="peak_deg2rad" pkg="intersection_recognition" type="peak_deg2rad" />
+	
 	<node name="euclidean_cluster_distribution_filter" pkg="intersection_recognition" type="euclidean_cluster_distribution_filter">
 		<remap from="/rm_cluster/removed_points" to="/static_cloud"/>
 		<param name="max_itr" type="int" value="100" />
@@ -13,8 +15,8 @@
 		<param name="dist_threshold" type="double" value="0.02" />
 		<param name="downsample_rate" type="double" value="0.3" />
 		<!-- <param name="cluster_tolerance" type="double" value="0.02" /> -->
-		<param name="cluster_tolerance" type="double" value="0.5" />
-		<param name="pt_dist_threshold" type="double" value="2.0" />
+		<param name="cluster_tolerance" type="double" value="0.3" />
+		<param name="pt_dist_threshold" type="double" value="4.0" />
 	</node>
 	
 	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom">

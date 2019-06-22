@@ -227,6 +227,14 @@ target_link_libraries(intersection_matching
   node_edge_map_interface
 )
 
+add_executable(peak_deg2rad src/peak_deg2rad.cpp)
+add_dependencies(peak_deg2rad ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(peak_deg2rad
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  node_edge_map_interface
+)
+
 # add_executable(pickup_cluster src/pickup_cluster.cpp)
 # add_dependencies(pickup_cluster ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(pickup_cluster
