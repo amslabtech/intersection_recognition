@@ -42,7 +42,8 @@ int devide = 720;
 //d-kan
 // double threshold = 7.0;
 // ikuta
-double threshold = 25.0;
+//double threshold = 25.0;
+double threshold = 999.9;
 
 ros::Publisher peak_pub;
 ros::Publisher marker_pub;

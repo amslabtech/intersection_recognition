@@ -4,7 +4,7 @@
 	
 	<node name="peak_deg2rad" pkg="intersection_recognition" type="peak_deg2rad" />
 	
-	<node name="euclidean_cluster_distribution_filter" pkg="intersection_recognition" type="euclidean_cluster_distribution_filter">
+	<node name="euclidean_cluster_distribution_filter" pkg="intersection_recognition" type="euclidean_cluster_distribution_filter" output="screen">
 		<remap from="/rm_cluster/removed_points" to="/static_cloud"/>
 		<param name="max_itr" type="int" value="100" />
 		<param name="min_cluster_size" type="int" value="1" />
