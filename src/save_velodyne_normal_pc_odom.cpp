@@ -184,6 +184,7 @@ int main (int argc, char** argv)
     shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/save_cloud", 1);
 
 	CloudAPtr conv_cloud (new CloudA);
+	CloudAPtr conv_cloud_grass (new CloudA);
 	CloudAPtr save_cloud (new CloudA);
 	//save_cloud->resize(SAVE_SIZE * loop);
 	//save_cloud->resize(SAVE_SIZE);
@@ -202,11 +203,22 @@ int main (int argc, char** argv)
 			grass_pc_callback_flag = false;
 
 			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			if(grass_pc_callback_flag){
-				cnv(grass_pc, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			}
+			cnv(grass_pc, conv_cloud_grass, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
 			CloudA pub_cloud;
-			int cloud_size = (int)conv_cloud->points.size();
+						
+			/*
+			for(size_t i=0;i<cloud_size;i++){
+				Copy_point(conv_cloud->points[i],save_cloud->points[SAVE_SIZE*save_count+i]);
+			}
+			*/
+			*save_cloud += *conv_cloud;
+			*save_cloud += *conv_cloud_grass;
+			
+			///////////////////save_cloud/////////////////////////
+			// omp_set_num_threads(4);
+			// #pragma omp parallel for
+						
+			int cloud_size = (int)save_cloud->points.size();
 			cloud_size_diff = cloud_size - cloud_size_threshold;
 			/////////////////////save_cloud/////////////////////////
 			cout<<"conv cloud size : "<<cloud_size<<endl;
@@ -215,24 +227,17 @@ int main (int argc, char** argv)
 				conv_cloud->points.erase(conv_cloud->points.begin(), conv_cloud->points.begin() + cloud_size_diff);
 				std::cout << "resized conv_cloud size : " << conv_cloud->points.size() << std::endl;
 			}
+
+			pubPointCloud2(shape_pub,*save_cloud,"/map",current_time);
 			
-			/*
-			for(size_t i=0;i<cloud_size;i++){
-				Copy_point(conv_cloud->points[i],save_cloud->points[SAVE_SIZE*save_count+i]);
-			}
-			*/
-			*save_cloud = *conv_cloud;
-			
-			///////////////////save_cloud/////////////////////////
-			// omp_set_num_threads(4);
-			// #pragma omp parallel for
 			if(Odometry_threshold(saveodom_x,saveodom_y,d_x,d_y)){
 				save_count++;
 				save_count = save_count%loop;
 				saveodom_x = d_x;
 				saveodom_y = d_y;
 			}
-			pubPointCloud2(shape_pub,*save_cloud,"/map",current_time);
+
+		
 		}
         ros::spinOnce();
         loop_rate.sleep();
