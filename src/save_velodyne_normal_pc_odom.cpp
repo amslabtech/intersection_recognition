@@ -195,14 +195,16 @@ int main (int argc, char** argv)
 	ros::Rate loop_rate(10);
 	while (ros::ok()){
 		std::cout << "while() start" << std::endl;
-		if(odom_callback && points_callback && grass_pc_callback_flag){
+		if(odom_callback && points_callback){
 			std::cout << "flags ok and next cnv" << std::endl;
 			odom_callback = false;
 			points_callback = false;
 			grass_pc_callback_flag = false;
 
 			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			cnv(grass_pc, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
+			if(grass_pc_callback_flag){
+				cnv(grass_pc, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
+			}
 			CloudA pub_cloud;
 			int cloud_size = (int)conv_cloud->points.size();
 			cloud_size_diff = cloud_size - cloud_size_threshold;
