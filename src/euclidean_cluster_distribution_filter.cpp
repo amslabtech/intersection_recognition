@@ -28,22 +28,14 @@ typedef pcl::PointXYZI PointI;
 typedef pcl::PointCloud<PointI> CloudI;
 typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
 CloudIPtr input_pc_ (new CloudI);
-CloudIPtr cloud_f_ (new CloudI);
 CloudIPtr cloud_filtered_ (new CloudI);
-CloudIPtr cloud_plane_ (new CloudI);
 CloudIPtr distribution_filtered_pc_ (new CloudI);
 
 typedef pcl::PointIndices PointIndices;
 typedef pcl::PointIndices::Ptr PointIndicesPtr;
-PointIndicesPtr inliers_ (new PointIndices);
-
-typedef pcl::ModelCoefficients Mdl_Coefficients;
-typedef pcl::ModelCoefficients::Ptr MdlcoefficientsPtr;
-MdlcoefficientsPtr coefficients_ (new Mdl_Coefficients);
 
 typedef pcl::search::KdTree<PointI> searchKdTree;
 typedef pcl::search::KdTree<PointI>::Ptr searchKdTreePtr;
-searchKdTreePtr tree_ (new searchKdTree);
 
 CloudIPtr distribution_filtered_points_ (new CloudI);
 
@@ -121,12 +113,12 @@ EuclideanCluster::EuclideanCluster()
 	nh.getParam("pt_dist_threshold", pt_dist_threshold);
 		
 	//set parameters
-	pcl::SACSegmentation<PointI> seg;
-	seg.setOptimizeCoefficients(true);
-	seg.setModelType(pcl::SACMODEL_PLANE);
-	seg.setMethodType(pcl::SAC_RANSAC);
-	seg.setMaxIterations(max_itr);
-	seg.setDistanceThreshold(dist_threshold);
+	// pcl::SACSegmentation<PointI> seg;
+	// seg.setOptimizeCoefficients(true);
+	// seg.setModelType(pcl::SACMODEL_PLANE);
+	// seg.setMethodType(pcl::SAC_RANSAC);
+	// seg.setMaxIterations(max_itr);
+	// seg.setDistanceThreshold(dist_threshold);
 }
 
 
@@ -151,6 +143,8 @@ void EuclideanCluster::filter(void)
 			/* std::cout << "published" << std::endl; */
 			Clustered_PC_List.erase(Clustered_PC_List.begin(), Clustered_PC_List.end());
 			distribution_filtered_points_->points.erase(distribution_filtered_points_->points.begin(), distribution_filtered_points_->points.end());
+			cluster_indices.erase(cluster_indices.begin(), cluster_indices.end());
+			cloud_filtered_->points.erase(cloud_filtered_->points.begin(), cloud_filtered_->points.end());
 		}
 		r.sleep();
 		ros::spinOnce();
@@ -184,43 +178,16 @@ void EuclideanCluster::pc_extract(void)
 
 	pcl::EuclideanClusterExtraction<PointI> ec;
 	pcl::ExtractIndices<PointI> extract;
-	/* while(cloud_filtered_->points.size() > downsample_rate * nr_points){ */
-	/* 	// Segment the largest planar component from the remaining cloud */
-	/* 	seg.setInputCloud(cloud_filtered_); */
-	/* 	seg.segment(*inliers_, *coefficients_); */
-	/* 	if(inliers_->indices.size() == 0){ */
-	/* 		std::cout << "Could not estimate a planar model for the given dataset." << std::endl; */
-	/* 		break; */
-	/* 	} */
-
-		// Extract the planar inliers from the input cloud
-		/*
-		extract.setInputCloud(cloud_filtered_);
-		extract.setIndices(inliers_);
-		extract.setNegative(false);
-
-		// Get the points associated with the planar surface
-		extract.filter(*cloud_plane_);
-
-		// Remove the planar inliers, extract the rest
-		extract.setNegative(true);
-		extract.filter(*cloud_f_);
-		*cloud_filtered_ = *cloud_f_;
-		*/	
-		//std::cout << "cloud_filtered size : " << cloud_filtered_->points.size() << std::endl;
-
-
-		// Creating the KdTree object for the search method of the extraction
-		tree_->setInputCloud(cloud_filtered_);
-		ec.setClusterTolerance(cluster_tolerance);
-		ec.setMinClusterSize(min_cluster_size);
-		ec.setMaxClusterSize(max_cluster_size);
-		ec.setSearchMethod(tree_);
-		ec.setInputCloud(cloud_filtered_);
-		ec.extract(cluster_indices);
-		std::cout << "cluster_indices size : " << cluster_indices.size() << std::endl;
-		//std::cout << "cluster_indices[0] = " << cluster_indices[0] << std::endl;
-	// }
+	searchKdTreePtr tree_ (new searchKdTree);
+	// Creating the KdTree object for the search method of the extraction
+	tree_->setInputCloud(cloud_filtered_);
+	ec.setClusterTolerance(cluster_tolerance);
+	ec.setMinClusterSize(min_cluster_size);
+	ec.setMaxClusterSize(max_cluster_size);
+	ec.setSearchMethod(tree_);
+	ec.setInputCloud(cloud_filtered_);
+	ec.extract(cluster_indices);
+	std::cout << "cluster_indices size : " << cluster_indices.size() << std::endl;
 }
 
 void EuclideanCluster::clustered_pc_represent(void)

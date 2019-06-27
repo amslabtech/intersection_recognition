@@ -8,7 +8,7 @@
 		<remap from="/rm_cluster/removed_points" to="/static_cloud"/>
 		<param name="max_itr" type="int" value="100" />
 		<param name="min_cluster_size" type="int" value="1" />
-		<param name="max_cluster_size" type="int" value="5000" />
+		<param name="max_cluster_size" type="int" value="2000" />
 		<param name="leaf_size_x" type="double" value="0.06" />
 		<param name="leaf_size_y" type="double" value="0.06" />
 		<param name="leaf_size_z" type="double" value="0.06" />
