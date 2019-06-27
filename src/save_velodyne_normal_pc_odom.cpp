@@ -178,6 +178,7 @@ int main (int argc, char** argv)
 	nh.getParam("cloud_size_threshold", cloud_size_threshold);
 
     ros::Subscriber sub = nh.subscribe ("/intersection_recognition/EC_distribution_filtered_pc", 1, static_callback);
+    ros::Subscriber grass_sub = nh.subscribe ("/grass_points", 1, grass_pc_callback);
 	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
     
     shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/save_cloud", 1);
