@@ -39,6 +39,7 @@ typedef pcl::PointCloud<PointA>::Ptr CloudAPtr;
 
 bool odom_callback = false;
 bool points_callback = false;
+bool grass_pc_callback_flag = false;
 double d_x=0.0, d_y=0.0, d_z=0.0;
 double angle_x_=0.0, angle_y_=0.0, angle_z_=0.0;
 double old_yaw=0.0;
@@ -137,6 +138,14 @@ void static_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 }
 
 
+CloudAPtr grass_pc (new CloudA);
+void grass_pc_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
+{
+	pcl::fromROSMsg(*msg, *grass_pc);
+	grass_pc_callback_flag = true;
+}
+
+
 void OdomCallback(const nav_msgs::Odometry input){
 	current_time = input.header.stamp;
 	d_x = input.pose.pose.position.x;
@@ -185,12 +194,14 @@ int main (int argc, char** argv)
 	ros::Rate loop_rate(10);
 	while (ros::ok()){
 		std::cout << "while() start" << std::endl;
-		if(odom_callback && points_callback){
+		if(odom_callback && points_callback && grass_pc_callback_flag){
 			std::cout << "flags ok and next cnv" << std::endl;
 			odom_callback = false;
 			points_callback = false;
-			
+			grass_pc_callback_flag = false;
+
 			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
+			cnv(grass_pc, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
 			CloudA pub_cloud;
 			int cloud_size = (int)conv_cloud->points.size();
 			cloud_size_diff = cloud_size - cloud_size_threshold;
