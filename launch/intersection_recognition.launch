@@ -20,7 +20,7 @@
 	</node>
 	
 	<node name="save_velodyne_normal_pc_odom" pkg="intersection_recognition" type="save_velodyne_normal_pc_odom" output="screen">
-		<param name="cloud_size_threshold" type="int" value="700000" />
+		<param name="cloud_size_threshold" type="int" value="50000" />
 		<!-- <remap from="/local_cloud" to="/rm_cluster/removed_points" /> -->
 	</node>
 

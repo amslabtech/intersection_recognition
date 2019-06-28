@@ -52,17 +52,24 @@ ros::Publisher shape_pub;
 ros::Publisher debug_pub;
 
 //publish pointcloud
+/*
 inline void pubPointCloud2(ros::Publisher& pub, 
                             const CloudA& cloud,
                             const char* frame_id,
                             ros::Time& time)
 {
+	std::cout << "publish!" << std::endl;
+	
+	cloud.width = cloud.points.size();
+	cloud.height = 1;
+
     sensor_msgs::PointCloud2 output;
     pcl::toROSMsg(cloud, output);
     output.header.frame_id ="map";
     output.header.stamp = time;
     pub.publish (output);
 }
+*/
 
 inline bool Odometry_threshold(double &s_x,double &s_y,double &x,double &y)
 {
@@ -108,8 +115,7 @@ void cnv(CloudAPtr org, CloudAPtr rsl,
 	Quaterniond total_quat;
 	total_quat = quat_Z * quat_Y * quat_X;
 	
-	//size_t SIZE = org->points.size();
-	size_t SIZE = SIZE_;
+	size_t SIZE = org->points.size();
 	//rsl->points.resize(SIZE);
 
 	*rsl = *org;
@@ -186,6 +192,7 @@ int main (int argc, char** argv)
 
     ros::Subscriber sub = nh.subscribe ("/intersection_recognition/EC_distribution_filtered_pc", 1, static_callback);
     ros::Subscriber grass_sub = nh.subscribe ("/grass_points", 1, grass_pc_callback);
+	//ros::Subscriber sub_lcl = n.subscribe("/tinypower/odom",1,OdomCallback);
 	ros::Subscriber sub_lcl = n.subscribe("/estimated_pose/pose",1,OdomCallback);
     
     shape_pub = nh.advertise<sensor_msgs::PointCloud2> ("/intersection_recognition/save_cloud", 1);
@@ -208,7 +215,7 @@ int main (int argc, char** argv)
 			size_t cnv_size = tmp_cloud->points.size();
 			
 			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_, cnv_size);
-			*save_cloud = *conv_cloud;
+			*save_cloud += *conv_cloud;
 	
 
 
@@ -220,9 +227,12 @@ int main (int argc, char** argv)
 				std::cout << "aaaaaa" << std::endl;
 				size_t grass_size = grass_pc->points.size();
 				cnv(grass_pc, conv_cloud_grass, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_, grass_size);
+				*save_cloud += *conv_cloud_grass;
+				/*
 				for(size_t i=0;i<grass_size;i++){
 					save_cloud->points.push_back(conv_cloud_grass->points[i]);
 				}
+				*/
 			}
 		
 
@@ -251,11 +261,11 @@ int main (int argc, char** argv)
 			cout<<"conv cloud size : "<<cloud_size<<endl;
 			
 			if(cloud_size_diff > 0){
-				conv_cloud->points.erase(conv_cloud->points.begin(), conv_cloud->points.begin() + cloud_size_diff);
-				std::cout << "resized conv_cloud size : " << conv_cloud->points.size() << std::endl;
+				save_cloud->points.erase(save_cloud->points.begin(), (save_cloud->points.begin() + (size_t)(cloud_size_diff)));
+				std::cout << "resized save_cloud size : " << save_cloud->points.size() << std::endl;
 			}
 
-			pubPointCloud2(shape_pub,*save_cloud,"/map",current_time);
+			//pubPointCloud2(shape_pub,*save_cloud,"/map",current_time);
 			
 			if(Odometry_threshold(saveodom_x,saveodom_y,d_x,d_y)){
 				save_count++;
@@ -263,6 +273,16 @@ int main (int argc, char** argv)
 				saveodom_x = d_x;
 				saveodom_y = d_y;
 			}
+			
+			save_cloud->width = save_cloud->points.size();
+			save_cloud->height = 1;
+		
+			sensor_msgs::PointCloud2 output;
+    		pcl::toROSMsg(*save_cloud, output);
+    		output.header.frame_id ="map";
+    		//output.header.stamp = time;
+    		output.header.stamp = current_time;
+    		shape_pub.publish (output);
 
 			odom_callback = false;
 			points_callback = false;
