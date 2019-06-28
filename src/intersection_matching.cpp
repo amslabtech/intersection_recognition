@@ -126,7 +126,9 @@ void IntersectionMatching::intersection_matching_manager(void)
 			//std::cout << "DETECT_MODE : " << DETECT_MODE << std::endl;
 			intersection_flag.data = intersection_recognizer();
 			//std::cout << "intersection_recognized" << std::endl;
-			intersection_flag_pub.publish(intersection_flag);
+			if(intersection_flag.data){
+				intersection_flag_pub.publish(intersection_flag);
+			}
 		}
 		r.sleep();
 		ros::spinOnce();
