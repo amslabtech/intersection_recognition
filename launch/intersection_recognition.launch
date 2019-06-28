@@ -2,6 +2,8 @@
 <launch>
 	<node name="detect_peak_save_pc" pkg="intersection_recognition" type="detect_peak_save_pc"/>
 	
+	<node name="calc_shape_saveclouds" pkg="intersection_recognition" type="calc_shape_saveclouds"/>
+	
 	<node name="peak_deg2rad" pkg="intersection_recognition" type="peak_deg2rad" />
 	
 	<node name="euclidean_cluster_distribution_filter" pkg="intersection_recognition" type="euclidean_cluster_distribution_filter">
