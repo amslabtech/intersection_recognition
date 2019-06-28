@@ -91,7 +91,7 @@ inline void Copy_point(PointA& org,PointA& save)
 */
 
 void cnv(CloudAPtr org, CloudAPtr rsl, 
-		 double dx, double dy, double dz, double angle_x, double angle_y, double angle_z)
+		 double dx, double dy, double dz, double angle_x, double angle_y, double angle_z, size_t SIZE_)
 {
 	// cout << "normal conv" << endl;
 	pcl::PointNormal p;
@@ -108,9 +108,11 @@ void cnv(CloudAPtr org, CloudAPtr rsl,
 	Quaterniond total_quat;
 	total_quat = quat_Z * quat_Y * quat_X;
 	
-	size_t SIZE = org->points.size();
-	rsl->points.resize(SIZE);
+	//size_t SIZE = org->points.size();
+	size_t SIZE = SIZE_;
+	//rsl->points.resize(SIZE);
 
+	*rsl = *org;
 	for(size_t i=0; i<SIZE; i++){	
 		point_in << org->points[i].x, org->points[i].y, org->points[i].z;
         
@@ -128,11 +130,13 @@ void cnv(CloudAPtr org, CloudAPtr rsl,
 			rsl->points[i].y = 100000.0;
 		}
 	}
+	std::cout << "cnv" << std::endl;
 }
 
 CloudAPtr tmp_cloud (new CloudA);
 void static_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
+	std::cout << "pc callback" << std::endl;
 	pcl::fromROSMsg(*msg,*tmp_cloud);
 	points_callback = true;
 }
@@ -141,12 +145,14 @@ void static_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 CloudAPtr grass_pc (new CloudA);
 void grass_pc_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
+	std::cout << "grass callback" << std::endl;
 	pcl::fromROSMsg(*msg, *grass_pc);
 	grass_pc_callback_flag = true;
 }
 
 
 void OdomCallback(const nav_msgs::Odometry input){
+	
 	current_time = input.header.stamp;
 	d_x = input.pose.pose.position.x;
 	d_y = input.pose.pose.position.y;
@@ -164,6 +170,7 @@ void OdomCallback(const nav_msgs::Odometry input){
 	angle_z_ = Y;
 	//angle_z_ = input.pose.pose.orientation.z;
 
+	std::cout << "odom callback" << std::endl;
 	odom_callback = true;
 }
 
@@ -195,24 +202,44 @@ int main (int argc, char** argv)
 	
 	ros::Rate loop_rate(10);
 	while (ros::ok()){
-		std::cout << "while() start" << std::endl;
+		//std::cout << "while() start" << std::endl;
 		if(odom_callback && points_callback){
 			std::cout << "flags ok and next cnv" << std::endl;
-			odom_callback = false;
-			points_callback = false;
-			grass_pc_callback_flag = false;
+			size_t cnv_size = tmp_cloud->points.size();
+			
+			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_, cnv_size);
+			*save_cloud = *conv_cloud;
+	
 
-			cnv(tmp_cloud, conv_cloud, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			cnv(grass_pc, conv_cloud_grass, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_);
-			CloudA pub_cloud;
-						
+
+
+			
+			
+			
+			if(grass_pc_callback_flag){
+				std::cout << "aaaaaa" << std::endl;
+				size_t grass_size = grass_pc->points.size();
+				cnv(grass_pc, conv_cloud_grass, d_x, d_y, d_z, angle_x_, angle_y_, angle_z_, grass_size);
+				for(size_t i=0;i<grass_size;i++){
+					save_cloud->points.push_back(conv_cloud_grass->points[i]);
+				}
+			}
+		
+
+
+
+
+
+			
+			
+			// if(grass_pc_callback_flag){
+
+						// }	
 			/*
 			for(size_t i=0;i<cloud_size;i++){
 				Copy_point(conv_cloud->points[i],save_cloud->points[SAVE_SIZE*save_count+i]);
 			}
 			*/
-			*save_cloud += *conv_cloud;
-			*save_cloud += *conv_cloud_grass;
 			
 			///////////////////save_cloud/////////////////////////
 			// omp_set_num_threads(4);
@@ -237,7 +264,11 @@ int main (int argc, char** argv)
 				saveodom_y = d_y;
 			}
 
-		
+			odom_callback = false;
+			points_callback = false;
+			grass_pc_callback_flag = false;
+			
+
 		}
         ros::spinOnce();
         loop_rate.sleep();
