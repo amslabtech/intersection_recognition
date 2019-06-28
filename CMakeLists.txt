@@ -232,7 +232,7 @@ add_dependencies(peak_deg2rad ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 target_link_libraries(peak_deg2rad
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  node_edge_map_interface
+  # node_edge_map_interface
 )
 
 # add_executable(pickup_cluster src/pickup_cluster.cpp)

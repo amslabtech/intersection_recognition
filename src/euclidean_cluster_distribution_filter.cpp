@@ -28,30 +28,16 @@ typedef pcl::PointXYZI PointI;
 typedef pcl::PointCloud<PointI> CloudI;
 typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
 CloudIPtr input_pc_ (new CloudI);
-CloudIPtr cloud_f_ (new CloudI);
 CloudIPtr cloud_filtered_ (new CloudI);
-CloudIPtr cloud_plane_ (new CloudI);
 CloudIPtr distribution_filtered_pc_ (new CloudI);
 
 typedef pcl::PointIndices PointIndices;
 typedef pcl::PointIndices::Ptr PointIndicesPtr;
-PointIndicesPtr inliers_ (new PointIndices);
-
-typedef pcl::ModelCoefficients Mdl_Coefficients;
-typedef pcl::ModelCoefficients::Ptr MdlcoefficientsPtr;
-MdlcoefficientsPtr coefficients_ (new Mdl_Coefficients);
 
 typedef pcl::search::KdTree<PointI> searchKdTree;
 typedef pcl::search::KdTree<PointI>::Ptr searchKdTreePtr;
-searchKdTreePtr tree_ (new searchKdTree);
 
-pcl::VoxelGrid<PointI> vg;
-
-pcl::SACSegmentation<PointI> seg;
-
-pcl::ExtractIndices<PointI> extract;
-
-pcl::EuclideanClusterExtraction<PointI> ec;
+CloudIPtr distribution_filtered_points_ (new CloudI);
 
 std::vector<PointIndices> cluster_indices;
 
@@ -68,9 +54,9 @@ class EuclideanCluster
 		void pc_callback(const sensor_msgs::PointCloud2ConstPtr&);
 		void pc_downsample(void);
 		void pc_extract(void);
-		std::vector<CloudIPtr> clustered_pc_represent(void);
+		void clustered_pc_represent(void);
 		Eigen::Vector3d calc_euclidean_cluster_size(CloudIPtr);
-		CloudIPtr distribution_filter(std::vector<CloudIPtr>);
+		CloudIPtr distribution_filter(void);
 
 	private:
 		bool pc_callback_flag = false;
@@ -127,11 +113,12 @@ EuclideanCluster::EuclideanCluster()
 	nh.getParam("pt_dist_threshold", pt_dist_threshold);
 		
 	//set parameters
-	seg.setOptimizeCoefficients(true);
-	seg.setModelType(pcl::SACMODEL_PLANE);
-	seg.setMethodType(pcl::SAC_RANSAC);
-	seg.setMaxIterations(max_itr);
-	seg.setDistanceThreshold(dist_threshold);
+	// pcl::SACSegmentation<PointI> seg;
+	// seg.setOptimizeCoefficients(true);
+	// seg.setModelType(pcl::SACMODEL_PLANE);
+	// seg.setMethodType(pcl::SAC_RANSAC);
+	// seg.setMaxIterations(max_itr);
+	// seg.setDistanceThreshold(dist_threshold);
 }
 
 
@@ -142,18 +129,22 @@ void EuclideanCluster::filter(void)
 		if(pc_callback_flag){
 			pc_downsample();
 			pc_extract();
-			Clustered_PC_List = clustered_pc_represent();
-			std::cout << "Clustered_PC_List size : " << Clustered_PC_List.size() << std::endl;
-			*distribution_filtered_pc_ = *distribution_filter(Clustered_PC_List);
-			distribution_filtered_pc_->header.stamp = input_pc_->header.stamp;
-			distribution_filtered_pc_->header.frame_id = input_pc_->header.frame_id;
+			//Clustered_PC_List = clustered_pc_represent(Clustered_PC_List);
+			clustered_pc_represent();
+			/* std::cout << "Clustered_PC_List size : " << Clustered_PC_List.size() << std::endl; */
+			distribution_filtered_pc_ = distribution_filter();
+			distribution_filtered_pc_->header = input_pc_->header;
 			pcl::toROSMsg(*distribution_filtered_pc_, pc_for_pub);
 			//pc_for_pub.header.stamp = input_pc_->header.stamp;
 			//pc_for_pub.header.stamp = ros::Time::now();
 			//pc_for_pub.header.frame_id = input_pc_->header.frame_id;
 			//pc_for_pub.header.frame_id = "map";
 			pub_pc.publish(pc_for_pub);
-			std::cout << "published" << std::endl;
+			/* std::cout << "published" << std::endl; */
+			Clustered_PC_List.erase(Clustered_PC_List.begin(), Clustered_PC_List.end());
+			distribution_filtered_points_->points.erase(distribution_filtered_points_->points.begin(), distribution_filtered_points_->points.end());
+			cluster_indices.erase(cluster_indices.begin(), cluster_indices.end());
+			cloud_filtered_->points.erase(cloud_filtered_->points.begin(), cloud_filtered_->points.end());
 		}
 		r.sleep();
 		ros::spinOnce();
@@ -163,7 +154,7 @@ void EuclideanCluster::filter(void)
 
 void EuclideanCluster::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
-	std::cout << "=====================================" <<std::endl;
+	/* std::cout << "=====================================" <<std::endl; */
 	pcl::fromROSMsg(*msg, *input_pc_);
 	
 	pc_callback_flag = true;
@@ -173,10 +164,11 @@ void EuclideanCluster::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg)
 void EuclideanCluster::pc_downsample(void)
 {
 	// Create the filtering object: downsample the dataset using each leaf size
+	pcl::VoxelGrid<PointI> vg;
 	vg.setInputCloud(input_pc_);
 	vg.setLeafSize(leaf_size_x, leaf_size_y, leaf_size_z);
 	vg.filter(*cloud_filtered_);
-	std::cout << cloud_filtered_->points.size() <<std::endl;
+	std::cout << "cloud_filtered_" << cloud_filtered_->points.size() <<std::endl;
 }
 
 
@@ -184,72 +176,46 @@ void EuclideanCluster::pc_extract(void)
 {
 	int nr_points = (int)cloud_filtered_->points.size();
 
-	/* while(cloud_filtered_->points.size() > downsample_rate * nr_points){ */
-	/* 	// Segment the largest planar component from the remaining cloud */
-	/* 	seg.setInputCloud(cloud_filtered_); */
-	/* 	seg.segment(*inliers_, *coefficients_); */
-	/* 	if(inliers_->indices.size() == 0){ */
-	/* 		std::cout << "Could not estimate a planar model for the given dataset." << std::endl; */
-	/* 		break; */
-	/* 	} */
-
-		// Extract the planar inliers from the input cloud
-		/*
-		extract.setInputCloud(cloud_filtered_);
-		extract.setIndices(inliers_);
-		extract.setNegative(false);
-
-		// Get the points associated with the planar surface
-		extract.filter(*cloud_plane_);
-
-		// Remove the planar inliers, extract the rest
-		extract.setNegative(true);
-		extract.filter(*cloud_f_);
-		*cloud_filtered_ = *cloud_f_;
-		*/	
-		//std::cout << "cloud_filtered size : " << cloud_filtered_->points.size() << std::endl;
-
-
-		// Creating the KdTree object for the search method of the extraction
-		tree_->setInputCloud(cloud_filtered_);
-		ec.setClusterTolerance(cluster_tolerance);
-		ec.setMinClusterSize(min_cluster_size);
-		ec.setMaxClusterSize(max_cluster_size);
-		ec.setSearchMethod(tree_);
-		ec.setInputCloud(cloud_filtered_);
-		ec.extract(cluster_indices);
-		std::cout << "cluster_indices size : " << cluster_indices.size() << std::endl;
-		//std::cout << "cluster_indices[0] = " << cluster_indices[0] << std::endl;
-	// }
+	pcl::EuclideanClusterExtraction<PointI> ec;
+	pcl::ExtractIndices<PointI> extract;
+	searchKdTreePtr tree_ (new searchKdTree);
+	// Creating the KdTree object for the search method of the extraction
+	tree_->setInputCloud(cloud_filtered_);
+	ec.setClusterTolerance(cluster_tolerance);
+	ec.setMinClusterSize(min_cluster_size);
+	ec.setMaxClusterSize(max_cluster_size);
+	ec.setSearchMethod(tree_);
+	ec.setInputCloud(cloud_filtered_);
+	ec.extract(cluster_indices);
+	std::cout << "cluster_indices size : " << cluster_indices.size() << std::endl;
 }
 
-
-std::vector<CloudIPtr> EuclideanCluster::clustered_pc_represent(void)
+void EuclideanCluster::clustered_pc_represent(void)
+//std::vector<CloudIPtr> *EuclideanCluster::clustered_pc_represent(const std::vector<CloudIPtr>& clustered_pc_list)
 {
 	std::vector<PointIndices>::const_iterator it;
-	std::vector<CloudIPtr> clustered_pc_list;
+	//std::vector<CloudIPtr> clustered_pc_list;
 	for(it = cluster_indices.begin(); it != cluster_indices.end(); ++it){
 		CloudIPtr cloud_cluster_ (new CloudI);
 		for(std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit){
 			cloud_cluster_->points.push_back(cloud_filtered_->points[*pit]);
 		}
 		cloud_cluster_->width = cloud_cluster_->points.size();
-		std::cout << "cloud_cluster_ size : " << cloud_cluster_->points.size() << std::endl;
+		/* std::cout << "cloud_cluster_ size : " << cloud_cluster_->points.size() << std::endl; */
 		cloud_cluster_->height = 1;
 		cloud_cluster_->is_dense = true;
 		
-		clustered_pc_list.push_back(cloud_cluster_);
+		Clustered_PC_List.push_back(cloud_cluster_);
 	}
 	
-	return clustered_pc_list;
+	//return clustered_pc_list;
 }
 
 
-CloudIPtr EuclideanCluster::distribution_filter(std::vector<CloudIPtr> clustered_PC_list)
+CloudIPtr EuclideanCluster::distribution_filter(void)
 {
 	CloudIPtr clustered_points_ (new CloudI);
-	CloudIPtr distribution_filtered_points_ (new CloudI);
-	size_t list_size = clustered_PC_list.size();
+	size_t list_size = Clustered_PC_List.size();
 
 	std::cout << "list_size : " << list_size << std::endl;
 
@@ -258,9 +224,9 @@ CloudIPtr EuclideanCluster::distribution_filter(std::vector<CloudIPtr> clustered
 		bool distribution_x_flag = false;
 		bool distribution_y_flag = false;
 		bool distribution_z_flag = false;
-		*clustered_points_ = *clustered_PC_list.at(i);
+		clustered_points_ = Clustered_PC_List.at(i);
 
-		std::cout << "clustered_points_ size : " << clustered_points_->points.size() << std::endl;
+		/* std::cout << "clustered_points_ size : " << clustered_points_->points.size() << std::endl; */
 
 		Eigen::Vector3d EC_size = calc_euclidean_cluster_size(clustered_points_);
 		
@@ -284,6 +250,7 @@ CloudIPtr EuclideanCluster::distribution_filter(std::vector<CloudIPtr> clustered
 	std::cout << "distribution_filtered_points size : " << distribution_filtered_points_->points.size() << std::endl;
 
 	return distribution_filtered_points_;
+
 }
 
 Eigen::Vector3d EuclideanCluster::calc_euclidean_cluster_size(CloudIPtr clst_pc_)
