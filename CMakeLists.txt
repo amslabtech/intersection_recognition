@@ -131,7 +131,7 @@ find_package(PCL REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ceres_msgs
-CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs 
+CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs geometry_msgs
 #  DEPENDS system_lib
 )
 
@@ -224,7 +224,6 @@ add_dependencies(intersection_matching ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 target_link_libraries(intersection_matching
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  node_edge_map_interface
 )
 
 add_executable(peak_deg2rad src/peak_deg2rad.cpp)
@@ -302,7 +301,7 @@ target_link_libraries(peak_deg2rad
 
 if(CATKIN_ENABLE_TESTING)
 	find_package(rostest REQUIRED)
-	add_rostest_gtest(intersection_recognition_test 
+	add_rostest_gtest(intersection_recognition_test
 		test/intersection_recognition.test
 		test/intersection_recognition_test.cpp
 	)
